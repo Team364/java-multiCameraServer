@@ -22,6 +22,8 @@ import edu.wpi.cscore.MjpegServer;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.cscore.VideoSource;
 import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.vision.VisionPipeline;
 import edu.wpi.first.vision.VisionThread;
@@ -411,12 +413,15 @@ public final class Main {
 
     // start NetworkTables
     NetworkTableInstance ntinst = NetworkTableInstance.getDefault();
+    NetworkTable table = ntinst.getTable("datatable");
+    NetworkTableEntry testValue = table.getEntry("testValue");
     if (server) {
       System.out.println("Setting up NetworkTables server");
       ntinst.startServer();
     } else {
       System.out.println("Setting up NetworkTables client for team " + team);
       ntinst.startClientTeam(team);
+      
     }
 
     // start cameras
@@ -426,24 +431,26 @@ public final class Main {
     }
 
     // start image processing on camera 0 if present
-    if (cameras.size() >= 1) {
-      VisionThread visionThread = new VisionThread(cameras.get(0),
-              new MyPipeline(), pipeline -> {
-        // do something with pipeline results
-      });
-      /* something like this for GRIP:
-      VisionThread visionThread = new VisionThread(cameras.get(0),
-              new GripPipeline(), pipeline -> {
-        ...
-      });
-       */
-      visionThread.start();
-    }
+    // if (cameras.size() >= 1) {
+    //   VisionThread visionThread = new VisionThread(cameras.get(0),
+    //           new MyPipeline(), pipeline -> {
+    //     // do something with pipeline results
+    //   });
+    //   /* something like this for GRIP:
+    //   VisionThread visionThread = new VisionThread(cameras.get(0),
+    //           new GripPipeline(), pipeline -> {
+    //     ...
+    //   });
+    //    */
+    //   visionThread.start();
+    // }
 
     // loop forever
     for (;;) {
       try {
         Thread.sleep(10000);
+        //Write to NetworkTable
+        testValue.setDouble(10);
       } catch (InterruptedException ex) {
         return;
       }
