@@ -68,6 +68,9 @@ import org.opencv.imgproc.*;
  */
 
 public final class Main {
+
+  private static Object imgLock = new Object();
+
   private static String configFile = "/boot/frc.json";
 
   @SuppressWarnings("MemberName")
@@ -373,28 +376,32 @@ public final class Main {
 		output.clear();
 		//operation
 		for (int i = 0; i < inputContours.size(); i++) {
-			final MatOfPoint contour = inputContours.get(i);
-			final Rect bb = Imgproc.boundingRect(contour);
-			if (bb.width < minWidth || bb.width > maxWidth) continue;
-			if (bb.height < minHeight || bb.height > maxHeight) continue;
+
+      final MatOfPoint contour = inputContours.get(i);
+      
+      final Rect bb = Imgproc.boundingRect(contour);
+			  if (bb.width < minWidth || bb.width > maxWidth) continue;
+			  if (bb.height < minHeight || bb.height > maxHeight) continue;
 			final double area = Imgproc.contourArea(contour);
-			if (area < minArea) continue;
-			if (Imgproc.arcLength(new MatOfPoint2f(contour.toArray()), true) < minPerimeter) continue;
+			  if (area < minArea) continue;
+			  if (Imgproc.arcLength(new MatOfPoint2f(contour.toArray()), true) < minPerimeter) continue;
 			Imgproc.convexHull(contour, hull);
 			MatOfPoint mopHull = new MatOfPoint();
-			mopHull.create((int) hull.size().height, 1, CvType.CV_32SC2);
+      mopHull.create((int) hull.size().height, 1, CvType.CV_32SC2);
+      
 			for (int j = 0; j < hull.size().height; j++) {
 				int index = (int)hull.get(j, 0)[0];
 				double[] point = new double[] { contour.get(index, 0)[0], contour.get(index, 0)[1]};
 				mopHull.put(j, 0, point);
-			}
+      }
+      
 			final double solid = 100 * area / Imgproc.contourArea(mopHull);
 			if (solid < solidity[0] || solid > solidity[1]) continue;
 			if (contour.rows() < minVertexCount || contour.rows() > maxVertexCount)	continue;
 			final double ratio = bb.width / (double)bb.height;
 			if (ratio < minRatio || ratio > maxRatio) continue;
-			output.add(contour);
-		}
+      output.add(contour);
+    }
 	}
   }
 
@@ -402,19 +409,22 @@ public final class Main {
    * Main.
    */
   public static void main(String... args) {
+    MyPipeline myPipeline = new MyPipeline();
+    final ArrayList<MatOfPoint> XValueArray;
+
     if (args.length > 0) {
       configFile = args[0];
     }
 
-    // read configuration
-    // if (!readConfig()) {
-    //   return;
-    // }
-
+    //read configuration
+    if (!readConfig()) {
+      return;
+    }
+   
     // start NetworkTables
     NetworkTableInstance ntinst = NetworkTableInstance.getDefault();
-    NetworkTable table = ntinst.getTable("datatable");
-    NetworkTableEntry testValue = table.getEntry("testValue");
+    NetworkTable table = ntinst.getTable("visionParameters");
+    NetworkTableEntry xValue = table.getEntry("xValue");
     if (server) {
       System.out.println("Setting up NetworkTables server");
       ntinst.startServer();
@@ -424,37 +434,50 @@ public final class Main {
       
     }
 
-    // // start cameras
-    // List<VideoSource> cameras = new ArrayList<>();
-    // for (CameraConfig cameraConfig : cameraConfigs) {
-    //   cameras.add(startCamera(cameraConfig));
-    // }
+    // start cameras
+    List<VideoSource> cameras = new ArrayList<>();
+    for (CameraConfig cameraConfig : cameraConfigs) {
+      cameras.add(startCamera(cameraConfig));
+    }
 
-    // start image processing on camera 0 if present
-    // if (cameras.size() >= 1) {
-    //   VisionThread visionThread = new VisionThread(cameras.get(0),
-    //           new MyPipeline(), pipeline -> {
-    //     // do something with pipeline results
-    //   });
-    //   /* something like this for GRIP:
-    //   VisionThread visionThread = new VisionThread(cameras.get(0),
-    //           new GripPipeline(), pipeline -> {
-    //     ...
-    //   });
-    //    */
-    //   visionThread.start();
-    // }
+    //start image processing on camera 0 if present
+    if (cameras.size() >= 1) {
+      VisionThread visionThread = new VisionThread(cameras.get(0),
+              new MyPipeline(), pipeline -> {
+                // LOCK
+                synchronized (imgLock) {
+                   // XValueArray = myPipeline.filterContoursOutput();                  
+              }
+                // Move "answers" from inside MyPipeline into myXValueArray
+                // myXValueArray = ???;
+           // 
+           //after frame is processed. pass values over to main thread
+      });
+      /* something like this for GRIP:
+      VisionThread visionThread = new VisionThread(cameras.get(0),
+              new GripPipeline(), pipeline -> {
+        
+      });
+       */
+      visionThread.start();
+    }
 
     // loop forever
     for (;;) {
-      testValue.setDouble(10);
-      // try {
-      //   //Thread.sleep(10000);
-      //   //Write to NetworkTable
+      //double[] myArray = {30.1, 30.2};
+      // LOCK
+
+       // xValue = XValueArray;
+    
+
+      //System.out.println(XValueArray);
+      try {
+        Thread.sleep(10000);
+        //Write to NetworkTable
         
-      // } catch (InterruptedException ex) {
-      //   return;
-      // }
+      } catch (InterruptedException ex) {
+        return;
+      }
     }
   }
 }
