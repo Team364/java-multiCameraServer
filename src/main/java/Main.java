@@ -407,9 +407,9 @@ public final class Main {
     }
 
     // read configuration
-    if (!readConfig()) {
-      return;
-    }
+    // if (!readConfig()) {
+    //   return;
+    // }
 
     // start NetworkTables
     NetworkTableInstance ntinst = NetworkTableInstance.getDefault();
@@ -419,16 +419,16 @@ public final class Main {
       System.out.println("Setting up NetworkTables server");
       ntinst.startServer();
     } else {
-      System.out.println("Setting up NetworkTables client for team " + team);
-      ntinst.startClientTeam(team);
+      System.out.println("Setting up NetworkTables client for team " + 364);
+      ntinst.startClientTeam(364);
       
     }
 
-    // start cameras
-    List<VideoSource> cameras = new ArrayList<>();
-    for (CameraConfig cameraConfig : cameraConfigs) {
-      cameras.add(startCamera(cameraConfig));
-    }
+    // // start cameras
+    // List<VideoSource> cameras = new ArrayList<>();
+    // for (CameraConfig cameraConfig : cameraConfigs) {
+    //   cameras.add(startCamera(cameraConfig));
+    // }
 
     // start image processing on camera 0 if present
     // if (cameras.size() >= 1) {
@@ -447,13 +447,14 @@ public final class Main {
 
     // loop forever
     for (;;) {
-      try {
-        Thread.sleep(10000);
-        //Write to NetworkTable
-        testValue.setDouble(10);
-      } catch (InterruptedException ex) {
-        return;
-      }
+      testValue.setDouble(10);
+      // try {
+      //   //Thread.sleep(10000);
+      //   //Write to NetworkTable
+        
+      // } catch (InterruptedException ex) {
+      //   return;
+      // }
     }
   }
 }
