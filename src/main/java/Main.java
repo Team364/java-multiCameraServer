@@ -70,7 +70,7 @@ import org.opencv.imgproc.*;
 public final class Main {
 
   private static Object imgLock = new Object();
-
+  public static double centerX;
   private static String configFile = "/boot/frc.json";
 
   @SuppressWarnings("MemberName")
@@ -208,6 +208,7 @@ public final class Main {
    * Example pipeline.
    */
   public static class MyPipeline implements VisionPipeline {
+   
     	//Outputs
 	private Mat hsvThresholdOutput = new Mat();
 	private ArrayList<MatOfPoint> findContoursOutput = new ArrayList<MatOfPoint>();
@@ -233,7 +234,10 @@ public final class Main {
 	private double filterContoursMaxVertices = 1000000.0;
 	private double filterContoursMinVertices = 0.0;
 	private double filterContoursMinRatio = 0.0;
-	private double filterContoursMaxRatio = 1000.0;
+  private double filterContoursMaxRatio = 1000.0;
+  
+
+  public double[] xValueArray;
 
 	public void setHsvThresholdParameters (	double[] inHsvThresholdHue, 
 											double[] inHsvThresholdSaturation, 
@@ -402,6 +406,7 @@ public final class Main {
 			if (ratio < minRatio || ratio > maxRatio) continue;
       output.add(contour);
     }
+
 	}
   }
 
@@ -410,8 +415,9 @@ public final class Main {
    */
   public static void main(String... args) {
     MyPipeline myPipeline = new MyPipeline();
-    final ArrayList<MatOfPoint> XValueArray;
 
+
+ 
     if (args.length > 0) {
       configFile = args[0];
     }
@@ -425,6 +431,7 @@ public final class Main {
     NetworkTableInstance ntinst = NetworkTableInstance.getDefault();
     NetworkTable table = ntinst.getTable("visionParameters");
     NetworkTableEntry xValue = table.getEntry("xValue");
+   // NetworkTableEntry testArray = table.getEntry("testArray");
     if (server) {
       System.out.println("Setting up NetworkTables server");
       ntinst.startServer();
@@ -445,9 +452,7 @@ public final class Main {
       VisionThread visionThread = new VisionThread(cameras.get(0),
               new MyPipeline(), pipeline -> {
                 // LOCK
-                synchronized (imgLock) {
-                   // XValueArray = myPipeline.filterContoursOutput();                  
-              }
+             
                 // Move "answers" from inside MyPipeline into myXValueArray
                 // myXValueArray = ???;
            // 
@@ -465,11 +470,25 @@ public final class Main {
     // loop forever
     for (;;) {
       //double[] myArray = {30.1, 30.2};
-      // LOCK
+      // LOCK   
 
+      synchronized (imgLock) {
+        for (int n = 0; n < myPipeline.filterContoursOutput.size(); n++){
+          if (!myPipeline.filterContoursOutput.isEmpty()) {
+            Rect r = Imgproc.boundingRect(myPipeline.filterContoursOutput().get(n)); 
+            centerX = r.x + (r.width / 2);
+            myPipeline.xValueArray[n] = centerX;
+            //xValue.setDouble(centerX);
+          // testArray.setDoubleArray(myPipeline.filterContoursOutput);
+          } 
+        }
+        xValue.setDoubleArray(myPipeline.xValueArray);
+
+      }
+ 
        // xValue = XValueArray;
     
-
+       //networkTable.putValue("array",xValueArray)
       //System.out.println(XValueArray);
       try {
         Thread.sleep(10000);
