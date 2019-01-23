@@ -71,6 +71,7 @@ public final class Main {
 
   private static Object imgLock = new Object();
   public static double centerX;
+  public static double xValue_CenterX;
   private static String configFile = "/boot/frc.json";
 
   @SuppressWarnings("MemberName")
@@ -218,26 +219,28 @@ public final class Main {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 	}
 	
-	// HSV Variables (w/defaults)
-	private double[] hsvThresholdHue = {71.22302158273381, 100.13651877133105};
-	private double[] hsvThresholdSaturation = {22.93165467625899, 107.04778156996588};
-	private double[] hsvThresholdValue = {240.78237410071944, 255.0};
-
+	// // HSV Variables (w/defaults)
+	// private double[] hsvThresholdHue = {71.22302158273381, 100.13651877133105};
+	// private double[] hsvThresholdSaturation = {22.93165467625899, 107.04778156996588};
+	// private double[] hsvThresholdValue = {240.78237410071944, 255.0};
+  double[] hsvThresholdHue = {0.0, 180.0};
+  double[] hsvThresholdSaturation = {0, 255.0};
+  double[] hsvThresholdValue = {0, 255.0};
 	// Contour Variables (w/defaults)
-	private double filterContoursMinArea = 100.0;
-	private double filterContoursMinPerimeter = 0.0;
-	private double filterContoursMinWidth = 0.0;
-	private double filterContoursMaxWidth = 999.0;
-	private double filterContoursMinHeight = 0.0;
-	private double filterContoursMaxHeight = 1000.0;
-	private double[] filterContoursSolidity = {0.0, 100.0};
-	private double filterContoursMaxVertices = 1000000.0;
-	private double filterContoursMinVertices = 0.0;
-	private double filterContoursMinRatio = 0.0;
-  private double filterContoursMaxRatio = 1000.0;
+	double filterContoursMinArea = 100.0;
+	double filterContoursMinPerimeter = 0.0;
+	double filterContoursMinWidth = 0.0;
+  double filterContoursMaxWidth = 999.0;
+	double filterContoursMinHeight = 0.0;
+	double filterContoursMaxHeight = 1000.0;
+	double[] filterContoursSolidity = {0.0, 100.0};
+	double filterContoursMaxVertices = 1000000.0;
+	double filterContoursMinVertices = 0.0;
+	double filterContoursMinRatio = 0.0;
+  double filterContoursMaxRatio = 1000.0;
   
 
-  public double[] xValueArray;
+  public double xValue;
 
 	public void setHsvThresholdParameters (	double[] inHsvThresholdHue, 
 											double[] inHsvThresholdSaturation, 
@@ -407,8 +410,11 @@ public final class Main {
       output.add(contour);
     }
 
-	}
+
   }
+ 
+  }
+
 
   /**
    * Main.
@@ -452,7 +458,13 @@ public final class Main {
       VisionThread visionThread = new VisionThread(cameras.get(0),
               new MyPipeline(), pipeline -> {
                 // LOCK
-             
+        
+                if (!myPipeline.filterContoursOutput.isEmpty()) {
+                  Rect r = Imgproc.boundingRect(myPipeline.filterContoursOutput().get(0)); 
+                  centerX = r.x + (r.width / 2);
+  
+    } 
+    
                 // Move "answers" from inside MyPipeline into myXValueArray
                 // myXValueArray = ???;
            // 
@@ -467,33 +479,32 @@ public final class Main {
       visionThread.start();
     }
 
+
     // loop forever
     for (;;) {
       //double[] myArray = {30.1, 30.2};
       // LOCK   
+      // synchronized(imgLock){
+      //   // xValue.setDouble(xValue_CenterX);
+     
 
-      synchronized (imgLock) {
-        for (int n = 0; n < myPipeline.filterContoursOutput.size(); n++){
-          if (!myPipeline.filterContoursOutput.isEmpty()) {
-            Rect r = Imgproc.boundingRect(myPipeline.filterContoursOutput().get(n)); 
-            centerX = r.x + (r.width / 2);
-            myPipeline.xValueArray[n] = centerX;
-            //xValue.setDouble(centerX);
-          // testArray.setDoubleArray(myPipeline.filterContoursOutput);
-          } 
-        }
-        xValue.setDoubleArray(myPipeline.xValueArray);
+      // }
+    
+  
 
-      }
+      
  
        // xValue = XValueArray;
     
        //networkTable.putValue("array",xValueArray)
       //System.out.println(XValueArray);
       try {
-        Thread.sleep(10000);
+        Thread.sleep(1000);
         //Write to NetworkTable
-        
+        xValue_CenterX = centerX;
+        xValue.setDouble(364);
+  
+      
       } catch (InterruptedException ex) {
         return;
       }
