@@ -57,8 +57,10 @@ public final class Main {
     // setup and start NetworkTables
     NetworkTableInstance ntinst = NetworkTableInstance.getDefault();
     NetworkTable table = ntinst.getTable("visionParameters");
+
     NetworkTableEntry xValue = table.getEntry("xValue");
-    NetworkTableEntry filteredContoursOutput = table.getEntry("filteredContoursOutput");
+    //NetworkTableEntry filteredContoursOutput = table.getEntry("filteredContoursOutput");
+    NetworkTableEntry searchConfigNumber = table.getEntry("searchConfigNumber"); // 0: tape, 1: ball, 2: disk
 
     System.out.println("Setting up NetworkTables client for team " + 364);
     ntinst.startClientTeam(364);
@@ -84,6 +86,9 @@ public final class Main {
       VisionThread visionThread = new VisionThread(cameras.get(0), new DynamicVisionPipeline(), pipeline -> {
         if (!processingPipeline.filterContoursOutput().isEmpty()) {
           synchronized (imgLock) {
+              // Setup pipeline to process TAPE, BALL, or DISK depending on NetworkTable input
+              processingPipeline.setSearchConfigNumber((int)searchConfigNumber.getDouble(0));
+              // Read out the latest output
               latestContours = processingPipeline.filterContoursOutput();
             }
           }

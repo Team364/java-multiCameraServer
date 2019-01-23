@@ -21,7 +21,7 @@ import edu.wpi.first.cameraserver.CameraServer;
 public final class CameraStuff {
   private static String configFile = "/boot/frc.json";
 
-  @SuppressWarnings("MemberName")
+  //@SuppressWarnings("MemberName")
   public static class CameraConfig {
     public String name;
     public String path;
@@ -77,7 +77,7 @@ public final class CameraStuff {
   /**
    * Read configuration file.
    */
-  @SuppressWarnings("PMD.CyclomaticComplexity")
+  //@SuppressWarnings("PMD.CyclomaticComplexity")
   public static boolean readConfigFile() {
     // parse file
     JsonElement top;
