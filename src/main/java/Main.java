@@ -59,8 +59,8 @@ public final class Main {
     NetworkTable table = ntinst.getTable("visionParameters");
 
     NetworkTableEntry xValue = table.getEntry("xValue");
-    //NetworkTableEntry filteredContoursOutput = table.getEntry("filteredContoursOutput");
     NetworkTableEntry searchConfigNumber = table.getEntry("searchConfigNumber"); // 0: tape, 1: ball, 2: disk
+    NetworkTableEntry visibleTargets = table.getEntry("visibleTargets");
 
     System.out.println("Setting up NetworkTables client for team " + 364);
     ntinst.startClientTeam(364);
@@ -88,6 +88,7 @@ public final class Main {
           synchronized (imgLock) {
               // Setup pipeline to process TAPE, BALL, or DISK depending on NetworkTable input
               processingPipeline.setSearchConfigNumber((int)searchConfigNumber.getDouble(0));
+
               // Read out the latest output
               latestContours = processingPipeline.filterContoursOutput();
             }
@@ -100,17 +101,32 @@ public final class Main {
     for (;;) {
       try {
         // Process a contour
-        Rect r;
+        // Rect r;
+        RotatedRect rotR;
+        ArrayList<RotatedRect> visibleTargetsObserved = new ArrayList<RotatedRect>();
+
+        // We have to LOCK to make sure 2nd thread doesn't change
+        // latestContours while we're reading from it
         synchronized (imgLock) {
-          r = Imgproc.boundingRect(latestContours.get(0));
+          //r = Imgproc.boundingRect(latestContours.get(0));
+          
+          // Iterate through output contours, bound by a rotated rectangle
+          // and print out information about each rectangle
+          for ( int i = 0; i < latestContours.size(); i++ ){
+            MatOfPoint2f curContour2f = new MatOfPoint2f(latestContours.get(i));
+            rotR = Imgproc.minAreaRect(curContour2f);
+            visibleTargetsObserved.add(rotR);
+            System.out.println(i + ": Angle: " + rotR.angle + " Center: " + rotR.center + " Size: " + rotR.size + "\n");
+          }
         }
-        centerX = r.x + (r.width / 2);
+        //centerX = r.x + (r.width / 2);
 
         // Write to NetworkTable
-        xValue.setDouble(centerX);
+        //xValue.setDouble(centerX);
+        //visibleTargets.setNumberArray(visibleTargetsProcessed);
 
-        // Rest
-        Thread.sleep(1000);
+        // Rest (in milliseconds)
+        Thread.sleep(100); // 0.1 seconds (10/sec)
 
       } catch (InterruptedException ex) {
         return;
