@@ -221,7 +221,8 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
     RotatedRect rotR = new RotatedRect();
     for ( int i = 0; i < inputContours.size(); i++ ){
-      MatOfPoint2f curContour2f = new MatOfPoint2f(inputContours.get(i));
+      // THIS LINE COULD BE AN ISSUE \/\/\/\/\/
+      MatOfPoint2f curContour2f = new MatOfPoint2f(inputContours.get(i).toArray());
       rotR = Imgproc.minAreaRect(curContour2f);
       outputRects.add(rotR);
 
