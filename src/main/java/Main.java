@@ -6,44 +6,30 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-// import java.io.IOException;
-// import java.nio.file.Files;
-// import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-// import com.google.gson.Gson;
-// import com.google.gson.GsonBuilder;
-// import com.google.gson.JsonArray;
-// import com.google.gson.JsonElement;
-// import com.google.gson.JsonObject;
-// import com.google.gson.JsonParser;
-
-// import edu.wpi.cscore.MjpegServer;
-// import edu.wpi.cscore.UsbCamera;
 import edu.wpi.cscore.VideoSource;
-// import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-// import edu.wpi.first.vision.VisionPipeline;
 import edu.wpi.first.vision.VisionThread;
 
-// import org.opencv.core.Mat;
 import org.opencv.core.*;
-import org.opencv.imgproc.*;
 
 import team364_rpi.*;
 
 public final class Main {
 
-  private static DynamicVisionPipeline processingPipeline;
-
-  public static double centerX;
-  //public static double xValue_CenterX;
-
+  // internals
   private static Object imgLock = new Object();
-  private static ArrayList<MatOfPoint> latestContours = new ArrayList<MatOfPoint>();
+  private static ArrayList<RotatedRect> latestRects = new ArrayList<RotatedRect>();
+
+  private static ArrayList<Number> angle = new ArrayList<Number>();
+  private static ArrayList<Number> width = new ArrayList<Number>();
+  private static ArrayList<Number> height = new ArrayList<Number>();
+  private static ArrayList<Number> centerX = new ArrayList<Number>();
+  private static ArrayList<Number> centerY = new ArrayList<Number>();
 
   private Main() { }
 
@@ -52,15 +38,19 @@ public final class Main {
    */
   public static void main(String... args) {
 
-    processingPipeline = new DynamicVisionPipeline();
-
     // setup and start NetworkTables
     NetworkTableInstance ntinst = NetworkTableInstance.getDefault();
-    NetworkTable table = ntinst.getTable("visionParameters");
+    NetworkTable visionTable = ntinst.getTable("visionParameters");
 
-    NetworkTableEntry xValue = table.getEntry("xValue");
-    NetworkTableEntry searchConfigNumber = table.getEntry("searchConfigNumber"); // 0: tape, 1: ball, 2: disk
-    NetworkTableEntry visibleTargets = table.getEntry("visibleTargets");
+    // Input entries
+    NetworkTableEntry searchConfigNumber = visionTable.getEntry("searchConfigNumber"); // 0: tape, 1: ball, 2: disk
+    
+    // Output entries
+    NetworkTableEntry visibleTargets_angle = visionTable.getEntry("visibleTargets.angle");
+    NetworkTableEntry visibleTargets_width = visionTable.getEntry("visibleTargets.width");
+    NetworkTableEntry visibleTargets_height = visionTable.getEntry("visibleTargets.height");
+    NetworkTableEntry visibleTargets_centerX = visionTable.getEntry("visibleTargets.centerX");
+    NetworkTableEntry visibleTargets_centerY = visionTable.getEntry("visibleTargets.centerY");
 
     System.out.println("Setting up NetworkTables client for team " + 364);
     ntinst.startClientTeam(364);
@@ -83,50 +73,49 @@ public final class Main {
 
     // start image processing on camera 0 if present
     if (cameras.size() >= 1) {
-      VisionThread visionThread = new VisionThread(cameras.get(0), new DynamicVisionPipeline(), pipeline -> {
-        if (!processingPipeline.filterContoursOutput().isEmpty()) {
-          synchronized (imgLock) {
-              // Setup pipeline to process TAPE, BALL, or DISK depending on NetworkTable input
-              processingPipeline.setSearchConfigNumber((int)searchConfigNumber.getDouble(0));
+      VisionThread visionThread = new VisionThread(cameras.get(0), new DynamicVisionPipeline(), processingPipeline -> {
+        synchronized (imgLock) {
+            // Setup pipeline to process TAPE, BALL, or DISK depending on NetworkTable input
+            processingPipeline.setSearchConfigNumber((int)searchConfigNumber.getDouble(0));
 
-              // Read out the latest output
-              latestContours = processingPipeline.filterContoursOutput();
-            }
+            // Read out the latest output from the pipeline
+            latestRects = processingPipeline.rotatedRectsOutput();
           }
         });
       visionThread.start();
     }
 
-    // loop forever and ever
+    // loop forever and ever ane ever
     for (;;) {
       try {
-        // Process a contour
-        // Rect r;
-        RotatedRect rotR;
-        ArrayList<RotatedRect> visibleTargetsObserved = new ArrayList<RotatedRect>();
+        angle.clear();
+        width.clear();
+        height.clear();
+        centerX.clear();
+        centerY.clear();
 
         // We have to LOCK to make sure 2nd thread doesn't change
-        // latestContours while we're reading from it
+        // outputRects while we're reading from it
         synchronized (imgLock) {
-          //r = Imgproc.boundingRect(latestContours.get(0));
-          
-          // Iterate through output contours, bound by a rotated rectangle
-          // and print out information about each rectangle
-          for ( int i = 0; i < latestContours.size(); i++ ){
-            MatOfPoint2f curContour2f = new MatOfPoint2f(latestContours.get(i));
-            rotR = Imgproc.minAreaRect(curContour2f);
-            visibleTargetsObserved.add(rotR);
-            System.out.println(i + ": Angle: " + rotR.angle + " Center: " + rotR.center + " Size: " + rotR.size + "\n");
+          for (int i = 0; i < latestRects.size(); i++) {
+            RotatedRect r = latestRects.get(i);
+            angle.add(r.angle);
+            width.add(r.size.width);
+            height.add(r.size.height);
+            centerX.add(r.center.x);
+            centerY.add(r.center.y);
           }
         }
-        //centerX = r.x + (r.width / 2);
 
         // Write to NetworkTable
-        //xValue.setDouble(centerX);
-        //visibleTargets.setNumberArray(visibleTargetsProcessed);
+        visibleTargets_angle.setDoubleArray(angle.stream().mapToDouble(i -> (double)i).toArray());
+        visibleTargets_width.setDoubleArray(width.stream().mapToDouble(i -> (double)i).toArray());
+        visibleTargets_height.setDoubleArray(height.stream().mapToDouble(i -> (double)i).toArray());
+        visibleTargets_centerX.setDoubleArray(centerX.stream().mapToDouble(i -> (double)i).toArray());
+        visibleTargets_centerY.setDoubleArray(centerY.stream().mapToDouble(i -> (double)i).toArray());
 
         // Rest (in milliseconds)
-        Thread.sleep(100); // 0.1 seconds (10/sec)
+        Thread.sleep(17); // 0.016 seconds (~60/sec), about 2x as fast as FPS
 
       } catch (InterruptedException ex) {
         return;

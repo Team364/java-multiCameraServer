@@ -13,8 +13,11 @@ public class DynamicVisionPipeline implements VisionPipeline {
   private Mat hsvThresholdOutput = new Mat();
   private ArrayList<MatOfPoint> findContoursOutput = new ArrayList<MatOfPoint>();
   private ArrayList<MatOfPoint> filterContoursOutput = new ArrayList<MatOfPoint>();
+  private ArrayList<RotatedRect> rotatedRectsOutput = new ArrayList<RotatedRect>();
+  //public double xValue;
+
+  // Inputs
   private int searchConfigNumber = 0;
-  public double xValue;
 
   public void setSearchConfigNumber (int inSearchConfigNumber) {
     // Set up parameters depending on our target (default TAPE):
@@ -51,39 +54,9 @@ public class DynamicVisionPipeline implements VisionPipeline {
   double filterContoursMaxRatio = 1000.0;
 
   // // HSV Variables (w/defaults)
-  // private double[] hsvThresholdHue = {71.22302158273381, 100.13651877133105};
-  // private double[] hsvThresholdSaturation = {22.93165467625899,
-  // 107.04778156996588};
-  // private double[] hsvThresholdValue = {240.78237410071944, 255.0};
-  double[] hsvThresholdHue = { 0.0, 180.0 };
-  double[] hsvThresholdSaturation = { 0, 255.0 };
-  double[] hsvThresholdValue = { 0, 255.0 };
-
-  public void setHsvThresholdParameters(double[] inHsvThresholdHue, double[] inHsvThresholdSaturation,
-      double[] inHsvThresholdValue) {
-
-    hsvThresholdHue = inHsvThresholdHue;
-    hsvThresholdSaturation = inHsvThresholdSaturation;
-    hsvThresholdValue = inHsvThresholdValue;
-  }
-
-  public void setFilterContours(double inFilterContoursMinArea, double inFilterContoursMinPerimeter,
-      double inFilterContoursMinWidth, double inFilterContoursMaxWidth, double inFilterContoursMinHeight,
-      double inFilterContoursMaxHeight, double[] inFilterContoursSolidity, double inFilterContoursMaxVertices,
-      double inFilterContoursMinVertices, double inFilterContoursMinRatio, double inFilterContoursMaxRatio) {
-
-    filterContoursMinArea = inFilterContoursMinArea;
-    filterContoursMinPerimeter = inFilterContoursMinPerimeter;
-    filterContoursMinWidth = inFilterContoursMinWidth;
-    filterContoursMaxWidth = inFilterContoursMaxWidth;
-    filterContoursMinHeight = inFilterContoursMinHeight;
-    filterContoursMaxHeight = inFilterContoursMaxHeight;
-    filterContoursSolidity = inFilterContoursSolidity;
-    filterContoursMaxVertices = inFilterContoursMaxVertices;
-    filterContoursMinVertices = inFilterContoursMinVertices;
-    filterContoursMinRatio = inFilterContoursMinRatio;
-    filterContoursMaxRatio = inFilterContoursMaxRatio;
-  }
+  double[] hsvThresholdHue = { 0.0, 180.0 }; //{71.22302158273381, 100.13651877133105};
+  double[] hsvThresholdSaturation = { 0, 255.0 }; //{22.93165467625899, 107.04778156996588};
+  double[] hsvThresholdValue = { 0, 255.0 }; //{240.78237410071944, 255.0};
 
   private void setupSearchForTape() {
     // Tape Fliter Values
@@ -168,19 +141,18 @@ public class DynamicVisionPipeline implements VisionPipeline {
         filterContoursMaxWidth, filterContoursMinHeight, filterContoursMaxHeight, filterContoursSolidity,
         filterContoursMaxVertices, filterContoursMinVertices, filterContoursMinRatio, filterContoursMaxRatio,
         filterContoursOutput);
+
+    // Step Find RotatedRects in Contours:
+    ArrayList<MatOfPoint> rotatedRectContours = filterContoursOutput;
+    generateRotatedRects(rotatedRectContours, rotatedRectsOutput);
+
   }
 
-  public Mat hsvThresholdOutput() {
-    return hsvThresholdOutput;
-  }
+  public Mat hsvThresholdOutput() { return hsvThresholdOutput; }
 
-  public ArrayList<MatOfPoint> findContoursOutput() {
-    return findContoursOutput;
-  }
-
-  public ArrayList<MatOfPoint> filterContoursOutput() {
-    return filterContoursOutput;
-  }
+  public ArrayList<MatOfPoint> findContoursOutput() { return findContoursOutput; }
+  public ArrayList<MatOfPoint> filterContoursOutput() { return filterContoursOutput; }
+  public ArrayList<RotatedRect> rotatedRectsOutput() { return rotatedRectsOutput; }
 
   private void hsvThreshold(Mat input, double[] hue, double[] sat, double[] val, Mat out) {
     Imgproc.cvtColor(input, out, Imgproc.COLOR_BGR2HSV);
@@ -242,6 +214,19 @@ public class DynamicVisionPipeline implements VisionPipeline {
       output.add(contour);
     }
 
+  }
+
+  public void generateRotatedRects(List<MatOfPoint> inputContours, ArrayList<RotatedRect> outputRects) {
+    outputRects.clear();
+
+    RotatedRect rotR = new RotatedRect();
+    for ( int i = 0; i < inputContours.size(); i++ ){
+      MatOfPoint2f curContour2f = new MatOfPoint2f(inputContours.get(i));
+      rotR = Imgproc.minAreaRect(curContour2f);
+      outputRects.add(rotR);
+
+      System.out.println(i + ": Angle: " + rotR.angle + " Center: " + rotR.center + " Size: " + rotR.size + "\n");
+    }
   }
 
 }
