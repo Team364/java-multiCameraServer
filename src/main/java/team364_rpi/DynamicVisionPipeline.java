@@ -216,7 +216,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
   }
 
-  public void generateRotatedRects(List<MatOfPoint> inputContours, ArrayList<RotatedRect> outputRects) {
+  public void generateRotatedRects(ArrayList<MatOfPoint> inputContours, ArrayList<RotatedRect> outputRects) {
     outputRects.clear();
 
     RotatedRect rotR = new RotatedRect();
