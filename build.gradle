@@ -18,13 +18,15 @@ repositories {
 dependencies {
     compile 'com.google.code.gson:gson:2.8.5'
 
-    compile name: 'wpiutil'
-    compile name: 'ntcore'
-    compile name: 'cscore'
-    compile name: 'cameraserver'
-    compile name: 'opencv-344'
-    compile name: 'wpilibj'
-    compile name: 'wpiHal'
+    implementation fileTree(dir: 'bin/libs', include: ['*.jar'])
+
+    // compile name: 'bin/libs/wpiutil'
+    // compile name: 'bin/libs/ntcore'
+    // compile name: 'bin/libs/cscore'
+    // compile name: 'bin/libs/cameraserver'
+    // compile name: 'bin/libs/opencv-344'
+    // compile name: 'bin/libs/wpilibj'
+    // compile name: 'bin/libs/wpiHal'
 }
 
 wrapper {

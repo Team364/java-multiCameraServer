@@ -1,6 +1,6 @@
 {
     "fps": 30,
-    "height": 120,
+    "height": 240,
     "pixel format": "mjpeg",
     "properties": [
         {
@@ -9,11 +9,11 @@
         },
         {
             "name": "raw_brightness",
-            "value": 201
+            "value": 128
         },
         {
             "name": "brightness",
-            "value": 20
+            "value": 50
         },
         {
             "name": "raw_contrast",
@@ -33,7 +33,7 @@
         },
         {
             "name": "white_balance_temperature_auto",
-            "value": false
+            "value": true
         },
         {
             "name": "raw_gain",
@@ -49,7 +49,7 @@
         },
         {
             "name": "white_balance_temperature",
-            "value": 70
+            "value": 1380
         },
         {
             "name": "raw_sharpness",
@@ -65,20 +65,20 @@
         },
         {
             "name": "exposure_auto",
-            "value": 1
+            "value": 3
         },
         {
             "name": "raw_exposure_absolute",
-            "value": 1
+            "value": 170
         },
         {
             "name": "exposure_absolute",
-            "value": 0
+            "value": 1
         },
         {
             "name": "exposure_auto_priority",
             "value": true
         }
     ],
-    "width": 180
+    "width": 320
 }
