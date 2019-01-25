@@ -147,6 +147,8 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
     // Step Find RotatedRects in Contours:
     ArrayList<MatOfPoint> rotatedRectContours = filterContoursOutput;
+    System.out.println("# contours: " + filterContoursOutput.size());
+
     generateRotatedRects(rotatedRectContours, rotatedRectsOutput);
 
   }
@@ -224,7 +226,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
     RotatedRect rotR = new RotatedRect();
     for ( int i = 0; i < inputContours.size(); i++ ){
-      
+
       // EDIT THE LINE BELOW THIS TO FIX MAT STUFF
       MatOfPoint2f curContour2f = new MatOfPoint2f(inputContours.get(i).toArray());
       rotR = Imgproc.minAreaRect(curContour2f);
