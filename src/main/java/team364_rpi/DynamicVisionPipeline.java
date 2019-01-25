@@ -125,6 +125,9 @@ public class DynamicVisionPipeline implements VisionPipeline {
    */
   @Override
   public void process(Mat source0) {
+    //System.out.println("0.0: "+source0.get(0,0)[0]);
+    //System.out.println("10.10: "+source0.get(10,10)[0]);
+    //System.out.println("source0: " + source0.s;
 
     // Step HSV_Threshold0:
     Mat hsvThresholdInput = source0;
@@ -221,6 +224,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
     RotatedRect rotR = new RotatedRect();
     for ( int i = 0; i < inputContours.size(); i++ ){
+      
       // EDIT THE LINE BELOW THIS TO FIX MAT STUFF
       MatOfPoint2f curContour2f = new MatOfPoint2f(inputContours.get(i).toArray());
       rotR = Imgproc.minAreaRect(curContour2f);
