@@ -24,6 +24,7 @@ public final class Main {
   // internals
   private static Object imgLock = new Object();
   private static ArrayList<RotatedRect> latestRects = new ArrayList<RotatedRect>();
+  private static boolean noTargets = true;
 
   private static ArrayList<Number> angle = new ArrayList<Number>();
   private static ArrayList<Number> width = new ArrayList<Number>();
@@ -51,6 +52,7 @@ public final class Main {
     NetworkTableEntry visibleTargets_height = visionTable.getEntry("visibleTargets.height");
     NetworkTableEntry visibleTargets_centerX = visionTable.getEntry("visibleTargets.centerX");
     NetworkTableEntry visibleTargets_centerY = visionTable.getEntry("visibleTargets.centerY");
+    NetworkTableEntry visibleTargets_noTarget = visionTable.getEntry("visibleTargets.noTarget");
 
     System.out.println("Setting up NetworkTables client for team " + 364);
     ntinst.startClientTeam(364);
@@ -97,6 +99,11 @@ public final class Main {
         // We have to LOCK to make sure 2nd thread doesn't change
         // outputRects while we're reading from it
         synchronized (imgLock) {
+          if(latestRects.size() > 0){
+            noTargets = false;
+          }else{
+            noTargets = true;
+          }
           for (int i = 0; i < latestRects.size(); i++) {
             RotatedRect r = latestRects.get(i);
             angle.add(r.angle);
@@ -113,7 +120,7 @@ public final class Main {
         visibleTargets_height.setDoubleArray(height.stream().mapToDouble(i -> (double)i).toArray());
         visibleTargets_centerX.setDoubleArray(centerX.stream().mapToDouble(i -> (double)i).toArray());
         visibleTargets_centerY.setDoubleArray(centerY.stream().mapToDouble(i -> (double)i).toArray());
-
+        visibleTargets_noTarget.setBoolean(noTargets);
         // Rest (in milliseconds)
         Thread.sleep(17); // 0.016 seconds (~60/sec), about 2x as fast as FPS
 
