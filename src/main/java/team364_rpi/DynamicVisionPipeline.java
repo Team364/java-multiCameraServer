@@ -14,6 +14,8 @@ public class DynamicVisionPipeline implements VisionPipeline {
   private ArrayList<MatOfPoint> findContoursOutput = new ArrayList<MatOfPoint>();
   private ArrayList<MatOfPoint> filterContoursOutput = new ArrayList<MatOfPoint>();
   private ArrayList<RotatedRect> rotatedRectsOutput = new ArrayList<RotatedRect>();
+  private ArrayList<Target> findTargetsOutput = new ArrayList<Target>();
+
   //public double xValue;
 
   // Inputs
@@ -73,9 +75,9 @@ public class DynamicVisionPipeline implements VisionPipeline {
     filterContoursMaxRatio = 1000.0;
 
     // Tape HSV Values
-    hsvThresholdHue = new double[] { 71.22302158273381, 100.13651877133105 };
-    hsvThresholdSaturation = new double[] { 22.93165467625899, 107.04778156996588 };
-    hsvThresholdValue = new double[] { 240.78237410071944, 255.0 };
+    hsvThresholdHue = new double[] { 0.0, 14.129692832764515};
+    hsvThresholdSaturation = new double[] { 0.0, 4.786689419795237 };
+    hsvThresholdValue = new double[] { 68.79496402877697, 122.27815699658701 };
 
   }
 
@@ -150,6 +152,10 @@ public class DynamicVisionPipeline implements VisionPipeline {
     System.out.println("# contours: " + filterContoursOutput.size());
 
     generateRotatedRects(rotatedRectContours, rotatedRectsOutput);
+
+    // Step Find targets based on visible rectangles
+    ArrayList<RotatedRect> rectsToCategorize = rotatedRectsOutput;
+    findTargets(rectsToCategorize, findTargetsOutput);
 
   }
 
@@ -232,8 +238,42 @@ public class DynamicVisionPipeline implements VisionPipeline {
       rotR = Imgproc.minAreaRect(curContour2f);
       outputRects.add(rotR);
 
-      System.out.println(i + ": Angle: " + rotR.angle + " Center: " + rotR.center + " Size: " + rotR.size + "\n");
+      System.out.println(i + ": Angle: " + rotR.angle + " Center: " + rotR.center + " Size: " + rotR.size.height + " " + rotR.size.width + "\n");
     }
   }
 
+  public void findTargets(ArrayList<RotatedRect> inputRects, ArrayList<Target> outputTargets){
+
+    outputTargets.clear();
+
+    // find a left-side rectangle:
+    // ArrayList<RotatedRect> rightLeaningRects = new ArrayList<RotatedRect>();
+    for (int i = 0; i < inputRects.size(); i++){
+      RotatedRect leftRect = inputRects.get(i);
+      // in a left-side rectangle, the longer side is considered the "width"
+      if (leftRect.size.width > leftRect.size.height) {
+        //System.out.println("Found a left");
+        // For each left-side rect, are there any nearby right-side rects?
+        for (int j = 0; j < inputRects.size(); j++){
+          RotatedRect rightRect = inputRects.get(j);
+          if (rightRect.size.width < rightRect.size.height) {
+            //System.out.println("Found a right");
+
+            // Found a right-side rect.. is it close? (i.e., is it less than 2 "widths" away?)
+            // "width" (which is the length of the tape) is a poor man's way of determining this.
+            if (leftRect.center.x + leftRect.size.width * 3 > rightRect.center.x) {
+              // Found a target! Let's figure out some stuff about it.
+              Target foundTarget = new Target();
+              foundTarget.centerX = leftRect.center.x + (rightRect.center.x - leftRect.center.x)/2;
+              foundTarget.centerY = leftRect.center.y; // this may be inaccurate.
+              foundTarget.distance = 0; // TODO: Actually do this...
+              foundTarget.faceAngle = 90; // TODO: Actually do this...
+
+              System.out.println("Found a target! x:"+foundTarget.centerX+" y:"+foundTarget.centerY);
+            }
+          }
+        }
+      }
+    }
+  }
 }

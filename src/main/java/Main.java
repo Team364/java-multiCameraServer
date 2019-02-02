@@ -39,23 +39,23 @@ public final class Main {
    */
   public static void main(String... args) {
 
-    // setup and start NetworkTables
-    NetworkTableInstance ntinst = NetworkTableInstance.getDefault();
-    NetworkTable visionTable = ntinst.getTable("visionParameters");
+    // // setup and start NetworkTables
+    // NetworkTableInstance ntinst = NetworkTableInstance.getDefault();
+    // NetworkTable visionTable = ntinst.getTable("visionParameters");
 
-    // Input entries
-    NetworkTableEntry searchConfigNumber = visionTable.getEntry("searchConfigNumber"); // 0: tape, 1: ball, 2: disk
+    // // Input entries
+    // NetworkTableEntry searchConfigNumber = visionTable.getEntry("searchConfigNumber"); // 0: tape, 1: ball, 2: disk
     
-    // Output entries
-    NetworkTableEntry visibleTargets_angle = visionTable.getEntry("visibleTargets.angle");
-    NetworkTableEntry visibleTargets_width = visionTable.getEntry("visibleTargets.width");
-    NetworkTableEntry visibleTargets_height = visionTable.getEntry("visibleTargets.height");
-    NetworkTableEntry visibleTargets_centerX = visionTable.getEntry("visibleTargets.centerX");
-    NetworkTableEntry visibleTargets_centerY = visionTable.getEntry("visibleTargets.centerY");
-    NetworkTableEntry visibleTargets_noTarget = visionTable.getEntry("visibleTargets.noTarget");
+    // // Output entries
+    // NetworkTableEntry visibleTargets_angle = visionTable.getEntry("visibleTargets.angle");
+    // NetworkTableEntry visibleTargets_width = visionTable.getEntry("visibleTargets.width");
+    // NetworkTableEntry visibleTargets_height = visionTable.getEntry("visibleTargets.height");
+    // NetworkTableEntry visibleTargets_centerX = visionTable.getEntry("visibleTargets.centerX");
+    // NetworkTableEntry visibleTargets_centerY = visionTable.getEntry("visibleTargets.centerY");
+    // NetworkTableEntry visibleTargets_noTarget = visionTable.getEntry("visibleTargets.noTarget");
 
-    System.out.println("Setting up NetworkTables client for team " + 364);
-    ntinst.startClientTeam(364);
+    // System.out.println("Setting up NetworkTables client for team " + 364);
+    // ntinst.startClientTeam(364);
 
     // Pass config file to the camera handler
     if (args.length > 0) {
@@ -78,7 +78,7 @@ public final class Main {
       VisionThread visionThread = new VisionThread(cameras.get(0), new DynamicVisionPipeline(), processingPipeline -> {
         synchronized (imgLock) {
             // Setup pipeline to process TAPE, BALL, or DISK depending on NetworkTable input
-            processingPipeline.setSearchConfigNumber((int)searchConfigNumber.getDouble(0));
+            processingPipeline.setSearchConfigNumber(0);//(int)searchConfigNumber.getDouble(0));
 
             // Read out the latest output from the pipeline
             latestRects = processingPipeline.rotatedRectsOutput();
@@ -115,12 +115,13 @@ public final class Main {
         }
 
         // Write to NetworkTable
-        visibleTargets_angle.setDoubleArray(angle.stream().mapToDouble(i -> (double)i).toArray());
-        visibleTargets_width.setDoubleArray(width.stream().mapToDouble(i -> (double)i).toArray());
-        visibleTargets_height.setDoubleArray(height.stream().mapToDouble(i -> (double)i).toArray());
-        visibleTargets_centerX.setDoubleArray(centerX.stream().mapToDouble(i -> (double)i).toArray());
-        visibleTargets_centerY.setDoubleArray(centerY.stream().mapToDouble(i -> (double)i).toArray());
-        visibleTargets_noTarget.setBoolean(noTargets);
+        // visibleTargets_angle.setDoubleArray(angle.stream().mapToDouble(i -> (double)i).toArray());
+        // visibleTargets_width.setDoubleArray(width.stream().mapToDouble(i -> (double)i).toArray());
+        // visibleTargets_height.setDoubleArray(height.stream().mapToDouble(i -> (double)i).toArray());
+        // visibleTargets_centerX.setDoubleArray(centerX.stream().mapToDouble(i -> (double)i).toArray());
+        // visibleTargets_centerY.setDoubleArray(centerY.stream().mapToDouble(i -> (double)i).toArray());
+        // visibleTargets_noTarget.setBoolean(noTargets);
+
         // Rest (in milliseconds)
         Thread.sleep(17); // 0.016 seconds (~60/sec), about 2x as fast as FPS
 
