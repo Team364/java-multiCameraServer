@@ -14,6 +14,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
   private ArrayList<MatOfPoint> findContoursOutput = new ArrayList<MatOfPoint>();
   private ArrayList<MatOfPoint> filterContoursOutput = new ArrayList<MatOfPoint>();
   private ArrayList<RotatedRect> rotatedRectsOutput = new ArrayList<RotatedRect>();
+  private ArrayList<Rect> rectsOutput = new ArrayList<Rect>();
   private ArrayList<Target> findTargetsOutput = new ArrayList<Target>();
 
   //public double xValue;
@@ -151,11 +152,13 @@ public class DynamicVisionPipeline implements VisionPipeline {
     ArrayList<MatOfPoint> rotatedRectContours = filterContoursOutput;
     System.out.println("# contours: " + filterContoursOutput.size());
 
-    generateRotatedRects(rotatedRectContours, rotatedRectsOutput);
+    generateRects(rotatedRectContours, rotatedRectsOutput, rectsOutput);
 
     // Step Find targets based on visible rectangles
-    ArrayList<RotatedRect> rectsToCategorize = rotatedRectsOutput;
-    findTargets(rectsToCategorize, findTargetsOutput);
+    ArrayList<RotatedRect> rotRectsToCategorize = rotatedRectsOutput;
+    ArrayList<Rect> rectsToCategorize = rectsOutput;
+
+    findTargets(rotRectsToCategorize, rectsToCategorize, findTargetsOutput);
 
   }
 
@@ -227,35 +230,41 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
   }
 
-  public void generateRotatedRects(ArrayList<MatOfPoint> inputContours, ArrayList<RotatedRect> outputRects) {
+  public void generateRects(ArrayList<MatOfPoint> inputContours, ArrayList<RotatedRect> outputRotatedRects, ArrayList<Rect> outputRects) {
+    
     outputRects.clear();
+    outputRotatedRects.clear();
 
     RotatedRect rotR = new RotatedRect();
+    Rect r = new Rect();
     for ( int i = 0; i < inputContours.size(); i++ ){
 
       // EDIT THE LINE BELOW THIS TO FIX MAT STUFF
       MatOfPoint2f curContour2f = new MatOfPoint2f(inputContours.get(i).toArray());
       rotR = Imgproc.minAreaRect(curContour2f);
-      outputRects.add(rotR);
+      r = Imgproc.boundingRect(inputContours.get(i));
+      
+      outputRects.add(r);
+      outputRotatedRects.add(rotR);
 
-      System.out.println(i + ": Angle: " + rotR.angle + " Center: " + rotR.center + " Size: " + rotR.size.height + " " + rotR.size.width + "\n");
+      System.out.println(i + ": Angle: " + rotR.angle + " h: " + r.height + " w: " +r.width+  " ctr: " + rotR.center + " size: " + rotR.size + "\n");
     }
   }
 
-  public void findTargets(ArrayList<RotatedRect> inputRects, ArrayList<Target> outputTargets){
+  public void findTargets(ArrayList<RotatedRect> inputRotatedRects, ArrayList<Rect> inputRects, ArrayList<Target> outputTargets){
 
     outputTargets.clear();
 
     // find a left-side rectangle:
     // ArrayList<RotatedRect> rightLeaningRects = new ArrayList<RotatedRect>();
     for (int i = 0; i < inputRects.size(); i++){
-      RotatedRect leftRect = inputRects.get(i);
+      RotatedRect leftRect = inputRotatedRects.get(i);
       // in a left-side rectangle, the longer side is considered the "width"
       if (leftRect.size.width > leftRect.size.height) {
         //System.out.println("Found a left");
         // For each left-side rect, are there any nearby right-side rects?
         for (int j = 0; j < inputRects.size(); j++){
-          RotatedRect rightRect = inputRects.get(j);
+          RotatedRect rightRect = inputRotatedRects.get(j);
           if (rightRect.size.width < rightRect.size.height) {
             //System.out.println("Found a right");
 
@@ -268,8 +277,10 @@ public class DynamicVisionPipeline implements VisionPipeline {
               foundTarget.centerY = leftRect.center.y; // this may be inaccurate.
               foundTarget.distance = 0; // TODO: Actually do this...
               foundTarget.faceAngle = 90; // TODO: Actually do this...
+              foundTarget.height = inputRects.get(i).height;
 
-              System.out.println("Found a target! x:"+foundTarget.centerX+" y:"+foundTarget.centerY);
+              //System.out.println("Found a target! x:"+foundTarget.centerX+" y:"+foundTarget.centerY);
+              System.out.println("Target Found, height: " + foundTarget.height);
             }
           }
         }
