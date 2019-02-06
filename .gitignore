@@ -1,6 +1,5 @@
-build/*
-!build/libs/
+build/
 bin/
 .gradle/
-.setting/
+.settings
 .classpath
