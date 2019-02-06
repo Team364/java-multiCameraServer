@@ -57,11 +57,12 @@ public final class Main {
     // System.out.println("Setting up NetworkTables client for team " + 364);
     // ntinst.startClientTeam(364);
 
+    // TODO: Delete the code below - we don't need to pass a config file for the camera via cmd line.
     // Pass config file to the camera handler
-    if (args.length > 0) {
-      System.out.println("args[0]: " + args[0]);
-      CameraStuff.setConfigFile(args[0]);
-    } else { System.out.println("No args provided. ");}
+    // if (args.length > 0) {
+    //   System.out.println("args[0]: " + args[0]);
+    //   CameraStuff.setConfigFile(args[0]);
+    // } else { System.out.println("No args provided. ");}
 
     // read config file
     if (!CameraStuff.readConfigFile()) {
