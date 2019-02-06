@@ -19,7 +19,7 @@ import edu.wpi.cscore.VideoSource;
 import edu.wpi.first.cameraserver.CameraServer;
 
 public final class CameraStuff {
-  private static String configFile = "/boot/frc.json";
+  private static String configFile = "/home/pi/configReadByJAR.json";//"/boot/frc.json";
 
   //@SuppressWarnings("MemberName")
   public static class CameraConfig {

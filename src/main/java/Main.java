@@ -59,8 +59,9 @@ public final class Main {
 
     // Pass config file to the camera handler
     if (args.length > 0) {
+      System.out.println("args[0]: " + args[0]);
       CameraStuff.setConfigFile(args[0]);
-    }
+    } else { System.out.println("No args provided. ");}
 
     // read config file
     if (!CameraStuff.readConfigFile()) {
