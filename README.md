@@ -27,3 +27,5 @@ enabling console output in the Vision Status tab.
 2. Run "./install.sh" (replaces /home/pi/runCamera)
 3. Run "./runInteractive" in /home/pi or "sudo svc -t /service/camera" to
    restart service.
+
+![Fusion Logo](http://www.fusion364.com/img/fusionlogo.png)
