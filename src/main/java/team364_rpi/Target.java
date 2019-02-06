@@ -6,5 +6,6 @@ public class Target {
     double centerY = 0;
     double distance = 0;
     double faceAngle = 0;
+    double height = 0;
 
 }
