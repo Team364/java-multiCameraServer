@@ -16,7 +16,7 @@
             "request": "launch",
             "mainClass": "Main",
             "projectName": "java-multiCameraServer",
-            "modulePaths": ["./bin/libs"]
+            "modulePaths": ["deps"]
         }
     ]
 }
