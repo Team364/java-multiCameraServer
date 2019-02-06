@@ -15,8 +15,7 @@
             "name": "Debug (Launch)-Main<java-multiCameraServer>",
             "request": "launch",
             "mainClass": "Main",
-            "projectName": "java-multiCameraServer",
-            "modulePaths": ["./bin/libs"]
+            "projectName": "java-multiCameraServer"
         }
     ]
 }
