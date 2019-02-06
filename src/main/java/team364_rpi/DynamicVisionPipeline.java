@@ -9,6 +9,9 @@ import org.opencv.imgproc.*;
 
 public class DynamicVisionPipeline implements VisionPipeline {
 
+  // Inputs
+  private int searchConfigNumber = 0;
+
   // Outputs
   private Mat hsvThresholdOutput = new Mat();
   private ArrayList<MatOfPoint> findContoursOutput = new ArrayList<MatOfPoint>();
@@ -17,27 +20,18 @@ public class DynamicVisionPipeline implements VisionPipeline {
   private ArrayList<Rect> rectsOutput = new ArrayList<Rect>();
   private ArrayList<Target> findTargetsOutput = new ArrayList<Target>();
 
-  //public double xValue;
+  // Getters
+  public Mat hsvThresholdOutput() { return hsvThresholdOutput; }
+  public ArrayList<MatOfPoint> findContoursOutput() { return findContoursOutput; }
+  public ArrayList<MatOfPoint> filterContoursOutput() { return filterContoursOutput; }
+  public ArrayList<RotatedRect> rotatedRectsOutput() { return rotatedRectsOutput; }
+  public ArrayList<Rect> rectsOutput() { return rectsOutput; }
+  public int searchConfigNumber() { return searchConfigNumber; }
 
-  // Inputs
-  private int searchConfigNumber = 0;
-
+  // Setters
   public void setSearchConfigNumber (int inSearchConfigNumber) {
-    // Set up parameters depending on our target (default TAPE):
-    if (inSearchConfigNumber == 1) { // BALL selected
-      searchConfigNumber = 1;
-      setupSearchForBall();
-    } else if (inSearchConfigNumber == 2) { // DISK selected
-      searchConfigNumber = 2;
-      setupSearchForDisk();
-    } else { // DEFAULT/TAPE selected
-      // default
-      searchConfigNumber = 0;
-      setupSearchForTape();
-    }
+    setupSearchForTape();
   }
-
-  public int searchConfigNumber() { return searchConfigNumber;}
 
   static {
     System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
@@ -61,6 +55,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
   double[] hsvThresholdSaturation = {22.93165467625899, 107.04778156996588};
   double[] hsvThresholdValue = {240.78237410071944, 255.0};
 
+
   private void setupSearchForTape() {
     // Tape Fliter Values
     filterContoursMinArea = 100.0;
@@ -82,55 +77,12 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
   }
 
-  private void setupSearchForBall() {
-    // ball Filter Values
-    filterContoursMinArea = 180.0;
-    filterContoursMinPerimeter = 200.0;
-    filterContoursMinWidth = 0.0;
-    filterContoursMaxWidth = 1000.0;
-    filterContoursMinHeight = 0.0;
-    filterContoursMaxHeight = 1000.0;
-    filterContoursSolidity = new double[] { 0.0, 100.0 };
-    filterContoursMaxVertices = 1000000.0;
-    filterContoursMinVertices = 0.0;
-    filterContoursMinRatio = 0.0;
-    filterContoursMaxRatio = 1000.0;
-
-    // ball HSV Values
-    hsvThresholdHue = new double[] { 0.16709213274541646, 23.428933171859523 };
-    hsvThresholdSaturation = new double[] { 105.48561151079136, 255.0 };
-    hsvThresholdValue = new double[] { 6.879496402877698, 255.0 };
-  }
-
-  private void setupSearchForDisk() {
-    // Disk Filter Values
-    filterContoursMinArea = 0.0;
-    filterContoursMinPerimeter = 200.0;
-    filterContoursMinWidth = 0.0;
-    filterContoursMaxWidth = 1000.0;
-    filterContoursMinHeight = 0.0;
-    filterContoursMaxHeight = 100.0;
-    filterContoursSolidity = new double[] { 0.0, 100.0 };
-    filterContoursMaxVertices = 1000000.0;
-    filterContoursMinVertices = 0.0;
-    filterContoursMinRatio = 0.0;
-    filterContoursMaxRatio = 1000.0;
-
-    // Disk HSV Values
-    hsvThresholdHue = new double[] { 22.66187050359712, 37.16723549488056 };
-    hsvThresholdSaturation = new double[] { 121.53776978417264, 255.0 };
-    hsvThresholdValue = new double[] { 133.00359712230215, 255.0 };
-  }
-
   /**
    * This is the primary method that runs the entire pipeline and updates the
    * outputs.
    */
   @Override
   public void process(Mat source0) {
-    //System.out.println("0.0: "+source0.get(0,0)[0]);
-    //System.out.println("10.10: "+source0.get(10,10)[0]);
-    //System.out.println("source0: " + source0.s;
 
     // Step HSV_Threshold0:
     Mat hsvThresholdInput = source0;
@@ -150,29 +102,36 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
     // Step Find RotatedRects in Contours:
     ArrayList<MatOfPoint> rotatedRectContours = filterContoursOutput;
-    System.out.println("# contours: " + filterContoursOutput.size());
-
     generateRects(rotatedRectContours, rotatedRectsOutput, rectsOutput);
 
     // Step Find targets based on visible rectangles
-    ArrayList<RotatedRect> rotRectsToCategorize = rotatedRectsOutput;
+    ArrayList<RotatedRect> rotatedRectsToCategorize = rotatedRectsOutput;
     ArrayList<Rect> rectsToCategorize = rectsOutput;
-
-    findTargets(rotRectsToCategorize, rectsToCategorize, findTargetsOutput);
+    findTargets(rotatedRectsToCategorize, rectsToCategorize, findTargetsOutput);
 
   }
 
-  public Mat hsvThresholdOutput() { return hsvThresholdOutput; }
-
-  public ArrayList<MatOfPoint> findContoursOutput() { return findContoursOutput; }
-  public ArrayList<MatOfPoint> filterContoursOutput() { return filterContoursOutput; }
-  public ArrayList<RotatedRect> rotatedRectsOutput() { return rotatedRectsOutput; }
-
+  /**
+	 * Segment an image based on hue, saturation, and value ranges.
+	 *
+	 * @param input The image on which to perform the HSL threshold.
+	 * @param hue The min and max hue
+	 * @param sat The min and max saturation
+	 * @param val The min and max value
+	 * @param out The image in which to store the output.
+	 */
   private void hsvThreshold(Mat input, double[] hue, double[] sat, double[] val, Mat out) {
     Imgproc.cvtColor(input, out, Imgproc.COLOR_BGR2HSV);
     Core.inRange(out, new Scalar(hue[0], sat[0], val[0]), new Scalar(hue[1], sat[1], val[1]), out);
   }
 
+  /**
+	 * Finds contours in input image.
+   * 
+	 * @param input The image in which to find contours.
+	 * @param externalOnly Whether contour retreival should be external only.
+	 * @param contours The list in which to store found contours.
+	 */
   private void findContours(Mat input, boolean externalOnly, List<MatOfPoint> contours) {
     Mat hierarchy = new Mat();
     contours.clear();
@@ -186,6 +145,23 @@ public class DynamicVisionPipeline implements VisionPipeline {
     Imgproc.findContours(input, contours, hierarchy, mode, method);
   }
 
+  /**
+	 * Filters out contours that do not meet certain criteria.
+   * 
+	 * @param inputContours is the input list of contours
+	 * @param minArea is the minimum area of a contour that will be kept
+	 * @param minPerimeter is the minimum perimeter of a contour that will be kept
+	 * @param minWidth minimum width of a contour
+	 * @param maxWidth maximum width
+	 * @param minHeight minimum height
+	 * @param maxHeight maximimum height
+	 * @param solidity the minimum and maximum solidity of a contour
+	 * @param maxVertexCount maximum vertex Count
+	 * @param minVertexCount minimum vertex Count of the contours
+	 * @param minRatio minimum ratio of width to height
+	 * @param maxRatio maximum ratio of width to height
+   * @param output is the the output list of contours
+	 */
   private void filterContours(List<MatOfPoint> inputContours, double minArea, double minPerimeter, double minWidth,
       double maxWidth, double minHeight, double maxHeight, double[] solidity, double maxVertexCount,
       double minVertexCount, double minRatio, double maxRatio, List<MatOfPoint> output) {
@@ -230,6 +206,13 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
   }
 
+   /**
+	 * Generates one rect and one min area rects per input contour.
+   * 
+	 * @param inputContours is the input list of contours
+	 * @param outputRotatedRects is the list of rotated rects generated
+	 * @param outputRects is the list of regular rects genereated; should be same size as outputRotatedRects
+	 */
   public void generateRects(ArrayList<MatOfPoint> inputContours, ArrayList<RotatedRect> outputRotatedRects, ArrayList<Rect> outputRects) {
     
     outputRects.clear();
@@ -251,6 +234,13 @@ public class DynamicVisionPipeline implements VisionPipeline {
     }
   }
 
+   /**
+	 * Looks for FRC targets in the rects passed, based on angles and sizes.
+   * 
+	 * @param inputRotatedRects is the input list of rotated rects
+	 * @param inputRects is the input list of regular rects
+	 * @param outputTargets is the list of Targets found
+	 */
   public void findTargets(ArrayList<RotatedRect> inputRotatedRects, ArrayList<Rect> inputRects, ArrayList<Target> outputTargets){
 
     outputTargets.clear();
@@ -287,4 +277,64 @@ public class DynamicVisionPipeline implements VisionPipeline {
       }
     }
   }
+
+
+  
 }
+
+// BALL and DISK setup functions, not currently used.
+
+// private void setupSearchForBall() {
+//   // ball Filter Values
+//   filterContoursMinArea = 180.0;
+//   filterContoursMinPerimeter = 200.0;
+//   filterContoursMinWidth = 0.0;
+//   filterContoursMaxWidth = 1000.0;
+//   filterContoursMinHeight = 0.0;
+//   filterContoursMaxHeight = 1000.0;
+//   filterContoursSolidity = new double[] { 0.0, 100.0 };
+//   filterContoursMaxVertices = 1000000.0;
+//   filterContoursMinVertices = 0.0;
+//   filterContoursMinRatio = 0.0;
+//   filterContoursMaxRatio = 1000.0;
+
+//   // ball HSV Values
+//   hsvThresholdHue = new double[] { 0.16709213274541646, 23.428933171859523 };
+//   hsvThresholdSaturation = new double[] { 105.48561151079136, 255.0 };
+//   hsvThresholdValue = new double[] { 6.879496402877698, 255.0 };
+// }
+
+// private void setupSearchForDisk() {
+//   // Disk Filter Values
+//   filterContoursMinArea = 0.0;
+//   filterContoursMinPerimeter = 200.0;
+//   filterContoursMinWidth = 0.0;
+//   filterContoursMaxWidth = 1000.0;
+//   filterContoursMinHeight = 0.0;
+//   filterContoursMaxHeight = 100.0;
+//   filterContoursSolidity = new double[] { 0.0, 100.0 };
+//   filterContoursMaxVertices = 1000000.0;
+//   filterContoursMinVertices = 0.0;
+//   filterContoursMinRatio = 0.0;
+//   filterContoursMaxRatio = 1000.0;
+
+//   // Disk HSV Values
+//   hsvThresholdHue = new double[] { 22.66187050359712, 37.16723549488056 };
+//   hsvThresholdSaturation = new double[] { 121.53776978417264, 255.0 };
+//   hsvThresholdValue = new double[] { 133.00359712230215, 255.0 };
+// }
+
+// public void setSearchConfigNumber (int inSearchConfigNumber) {
+//   // Set up parameters depending on our target (default TAPE):
+//   if (inSearchConfigNumber == 1) { // BALL selected
+//     searchConfigNumber = 1;
+//     setupSearchForBall();
+//   } else if (inSearchConfigNumber == 2) { // DISK selected
+//     searchConfigNumber = 2;
+//     setupSearchForDisk();
+//   } else { // DEFAULT/TAPE selected
+//     // default
+//     searchConfigNumber = 0;
+//     setupSearchForTape();
+//   }
+// }
