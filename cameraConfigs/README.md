@@ -6,7 +6,7 @@
 **DO NOT REPLACE THE EXTRA STUFF IN THERE**
 1. Set rPI to Writable using frcvision.local interface
 1. Copy the new JSON to the pi:
-     cd to the cameraConfigs directory
+    1. cd to the cameraConfigs directory
     1. Run 
     ```scp configReadByJAR.JSON pi@frcvision.local:/home/pi```
       (or use WinSCP if you're a Windows user)
