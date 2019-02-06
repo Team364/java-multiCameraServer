@@ -102,6 +102,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
     // Step Find RotatedRects in Contours:
     ArrayList<MatOfPoint> rotatedRectContours = filterContoursOutput;
 <<<<<<< HEAD
+<<<<<<< HEAD
     generateRects(rotatedRectContours, rotatedRectsOutput, rectsOutput);
 
     // Step Find targets based on visible rectangles
@@ -112,6 +113,15 @@ public class DynamicVisionPipeline implements VisionPipeline {
     System.out.println("# contours: " + filterContoursOutput.size());
 
     generateRotatedRects(rotatedRectContours, rotatedRectsOutput);
+=======
+    System.out.println("# contours: " + filterContoursOutput.size());
+
+    generateRotatedRects(rotatedRectContours, rotatedRectsOutput);
+
+    // Step Find targets based on visible rectangles
+    ArrayList<RotatedRect> rectsToCategorize = rotatedRectsOutput;
+    findTargets(rectsToCategorize, findTargetsOutput);
+>>>>>>> parent of 2765c7f... Prints height of target to screen.
 
     // Step Find targets based on visible rectangles
     ArrayList<RotatedRect> rectsToCategorize = rotatedRectsOutput;
@@ -216,6 +226,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
   }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
    /**
 	 * Generates one rect and one min area rects per input contour.
    * 
@@ -225,6 +236,9 @@ public class DynamicVisionPipeline implements VisionPipeline {
 	 */
   public void generateRects(ArrayList<MatOfPoint> inputContours, ArrayList<RotatedRect> outputRotatedRects, ArrayList<Rect> outputRects) {
     
+=======
+  public void generateRotatedRects(ArrayList<MatOfPoint> inputContours, ArrayList<RotatedRect> outputRects) {
+>>>>>>> parent of 2765c7f... Prints height of target to screen.
 =======
   public void generateRotatedRects(ArrayList<MatOfPoint> inputContours, ArrayList<RotatedRect> outputRects) {
 >>>>>>> parent of 2765c7f... Prints height of target to screen.
@@ -243,6 +257,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
   }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
    /**
 	 * Looks for FRC targets in the rects passed, based on angles and sizes.
    * 
@@ -251,6 +266,9 @@ public class DynamicVisionPipeline implements VisionPipeline {
 	 * @param outputTargets is the list of Targets found
 	 */
   public void findTargets(ArrayList<RotatedRect> inputRotatedRects, ArrayList<Rect> inputRects, ArrayList<Target> outputTargets){
+=======
+  public void findTargets(ArrayList<RotatedRect> inputRects, ArrayList<Target> outputTargets){
+>>>>>>> parent of 2765c7f... Prints height of target to screen.
 =======
   public void findTargets(ArrayList<RotatedRect> inputRects, ArrayList<Target> outputTargets){
 >>>>>>> parent of 2765c7f... Prints height of target to screen.
