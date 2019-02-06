@@ -18,7 +18,7 @@ repositories {
 dependencies {
     compile 'com.google.code.gson:gson:2.8.5'
 
-    implementation fileTree(dir: 'bin/libs', include: ['*.jar'])
+    implementation fileTree(dir: 'deps', include: ['*.jar'])
 
     // compile name: 'bin/libs/wpiutil'
     // compile name: 'bin/libs/ntcore'
