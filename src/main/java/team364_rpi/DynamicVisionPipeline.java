@@ -76,9 +76,9 @@ public class DynamicVisionPipeline implements VisionPipeline {
     filterContoursMaxRatio = 1000.0;
 
     // Tape HSV Values
-    hsvThresholdHue = new double[] { 0.0, 14.129692832764515};
-    hsvThresholdSaturation = new double[] { 0.0, 4.786689419795237 };
-    hsvThresholdValue = new double[] { 68.79496402877697, 122.27815699658701 };
+    hsvThresholdHue = new double[] {22.66187050359712, 127.7815699658703};
+    hsvThresholdSaturation = new double[] {55.03597122302158, 255.0};
+    hsvThresholdValue = new double[] {143.55215827338128, 255.0};
 
   }
 
