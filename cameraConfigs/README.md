@@ -8,9 +8,9 @@
 1. Copy the new JSON to the pi:
      cd to the cameraConfigs directory
     1. Run 
-'''
-scp configReadByJAR.JSON pi@frcvision.local:/home/pi>
-'''
+```
+scp configReadByJAR.JSON pi@frcvision.local:/home/pi
+```
       (or use WinSCP if you're a Windows user)
     1. When prompted, enter "raspberry" as password
 1. Voila! The file should be automatically read by java-multiCameraServer-all.jar
