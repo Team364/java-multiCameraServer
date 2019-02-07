@@ -13,7 +13,7 @@
     1. When prompted, enter "raspberry" as password
 1. Voila! The file should be automatically read by java-multiCameraServer-all.jar
 
-# Using WinSCP to run Step 5.ii
+## Using WinSCP to run Step 5.ii
 
 1. Open WinSCP, connect using the following settings:
 - File protocol: SCP
