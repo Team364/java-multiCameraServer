@@ -14,3 +14,7 @@
 1. Voila! The file should be automatically read by java-multiCameraServer-all.jar
 
 ![Fusion Logo](http://www.fusion364.com/img/fusionlogo.png)
+
+![Step 1](../images/step1.png)
+![Step 2](../images/step2.png)
+![Step 3](../images/step3.png)
