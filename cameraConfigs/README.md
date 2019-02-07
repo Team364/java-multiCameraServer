@@ -13,4 +13,22 @@
     1. When prompted, enter "raspberry" as password
 1. Voila! The file should be automatically read by java-multiCameraServer-all.jar
 
+## Using WinSCP to run Step 5.ii
+
+1. Open WinSCP, connect using the following settings:
+- File protocol: SCP
+- Host name: frcvision.local (or the target host's IP address)
+- Port number: 22
+- User name: pi
+- Password: raspberry
+
+<img src="../images/step1.png" width="500" />
+
+1. When prompted to accept key, click Yes
+<img src="../images/step2.png" width="500" />
+
+1. You should now be connected. You can drag and drop "configReadByJAR.json" 
+from the left pane onto the right. This will transfer the document over.
+<img src="../images/step3.png" width="500" />
+
 ![Fusion Logo](http://www.fusion364.com/img/fusionlogo.png)
