@@ -15,6 +15,8 @@
 
 ![Fusion Logo](http://www.fusion364.com/img/fusionlogo.png)
 
+<img src="../images/step1.png" width="200" />
+
 ![Step 1](../images/step1.png =250x)
 ![Step 2](../images/step2.png =250x)
 ![Step 3](../images/step3.png =250x)
