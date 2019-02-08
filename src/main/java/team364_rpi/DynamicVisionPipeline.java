@@ -24,17 +24,17 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
   public void setSearchConfigNumber (int inSearchConfigNumber) {
     // Set up parameters depending on our target (default TAPE):
-    if (inSearchConfigNumber == 1) { // BALL selected
-      searchConfigNumber = 1;
-      setupSearchForBall();
-    } else if (inSearchConfigNumber == 2) { // DISK selected
-      searchConfigNumber = 2;
-      setupSearchForDisk();
-    } else { // DEFAULT/TAPE selected
-      // default
-      searchConfigNumber = 0;
+    // if (inSearchConfigNumber == 1) { // BALL selected
+    //   searchConfigNumber = 1;
+    //   setupSearchForBall();
+    // } else if (inSearchConfigNumber == 2) { // DISK selected
+    //   searchConfigNumber = 2;
+    //   setupSearchForDisk();
+    // } else { // DEFAULT/TAPE selected
+    //   // default
+    //   searchConfigNumber = 0;
       setupSearchForTape();
-    }
+    // }
   }
 
   public int searchConfigNumber() { return searchConfigNumber;}
@@ -82,55 +82,12 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
   }
 
-  private void setupSearchForBall() {
-    // ball Filter Values
-    filterContoursMinArea = 180.0;
-    filterContoursMinPerimeter = 200.0;
-    filterContoursMinWidth = 0.0;
-    filterContoursMaxWidth = 1000.0;
-    filterContoursMinHeight = 0.0;
-    filterContoursMaxHeight = 1000.0;
-    filterContoursSolidity = new double[] { 0.0, 100.0 };
-    filterContoursMaxVertices = 1000000.0;
-    filterContoursMinVertices = 0.0;
-    filterContoursMinRatio = 0.0;
-    filterContoursMaxRatio = 1000.0;
-
-    // ball HSV Values
-    hsvThresholdHue = new double[] { 0.16709213274541646, 23.428933171859523 };
-    hsvThresholdSaturation = new double[] { 105.48561151079136, 255.0 };
-    hsvThresholdValue = new double[] { 6.879496402877698, 255.0 };
-  }
-
-  private void setupSearchForDisk() {
-    // Disk Filter Values
-    filterContoursMinArea = 0.0;
-    filterContoursMinPerimeter = 200.0;
-    filterContoursMinWidth = 0.0;
-    filterContoursMaxWidth = 1000.0;
-    filterContoursMinHeight = 0.0;
-    filterContoursMaxHeight = 100.0;
-    filterContoursSolidity = new double[] { 0.0, 100.0 };
-    filterContoursMaxVertices = 1000000.0;
-    filterContoursMinVertices = 0.0;
-    filterContoursMinRatio = 0.0;
-    filterContoursMaxRatio = 1000.0;
-
-    // Disk HSV Values
-    hsvThresholdHue = new double[] { 22.66187050359712, 37.16723549488056 };
-    hsvThresholdSaturation = new double[] { 121.53776978417264, 255.0 };
-    hsvThresholdValue = new double[] { 133.00359712230215, 255.0 };
-  }
-
   /**
    * This is the primary method that runs the entire pipeline and updates the
    * outputs.
    */
   @Override
   public void process(Mat source0) {
-    //System.out.println("0.0: "+source0.get(0,0)[0]);
-    //System.out.println("10.10: "+source0.get(10,10)[0]);
-    //System.out.println("source0: " + source0.s;
 
     // Step HSV_Threshold0:
     Mat hsvThresholdInput = source0;
@@ -151,14 +108,21 @@ public class DynamicVisionPipeline implements VisionPipeline {
     // Step Find RotatedRects in Contours:
     ArrayList<MatOfPoint> rotatedRectContours = filterContoursOutput;
     System.out.println("# contours: " + filterContoursOutput.size());
-
     generateRects(rotatedRectContours, rotatedRectsOutput, rectsOutput);
 
     // Step Find targets based on visible rectangles
     ArrayList<RotatedRect> rotRectsToCategorize = rotatedRectsOutput;
     ArrayList<Rect> rectsToCategorize = rectsOutput;
-
     findTargets(rotRectsToCategorize, rectsToCategorize, findTargetsOutput);
+
+    //Imgproc.rectangle(img, pt1, pt2, color);
+    Imgproc.rectangle(
+      source0, 
+      new Point(10,10), 
+      new Point (100,100), 
+      new Scalar(0,255,0),
+      10
+    );
 
   }
 
@@ -288,3 +252,44 @@ public class DynamicVisionPipeline implements VisionPipeline {
     }
   }
 }
+
+
+  // private void setupSearchForBall() {
+  //   // ball Filter Values
+  //   filterContoursMinArea = 180.0;
+  //   filterContoursMinPerimeter = 200.0;
+  //   filterContoursMinWidth = 0.0;
+  //   filterContoursMaxWidth = 1000.0;
+  //   filterContoursMinHeight = 0.0;
+  //   filterContoursMaxHeight = 1000.0;
+  //   filterContoursSolidity = new double[] { 0.0, 100.0 };
+  //   filterContoursMaxVertices = 1000000.0;
+  //   filterContoursMinVertices = 0.0;
+  //   filterContoursMinRatio = 0.0;
+  //   filterContoursMaxRatio = 1000.0;
+
+  //   // ball HSV Values
+  //   hsvThresholdHue = new double[] { 0.16709213274541646, 23.428933171859523 };
+  //   hsvThresholdSaturation = new double[] { 105.48561151079136, 255.0 };
+  //   hsvThresholdValue = new double[] { 6.879496402877698, 255.0 };
+  // }
+
+  // private void setupSearchForDisk() {
+  //   // Disk Filter Values
+  //   filterContoursMinArea = 0.0;
+  //   filterContoursMinPerimeter = 200.0;
+  //   filterContoursMinWidth = 0.0;
+  //   filterContoursMaxWidth = 1000.0;
+  //   filterContoursMinHeight = 0.0;
+  //   filterContoursMaxHeight = 100.0;
+  //   filterContoursSolidity = new double[] { 0.0, 100.0 };
+  //   filterContoursMaxVertices = 1000000.0;
+  //   filterContoursMinVertices = 0.0;
+  //   filterContoursMinRatio = 0.0;
+  //   filterContoursMaxRatio = 1000.0;
+
+  //   // Disk HSV Values
+  //   hsvThresholdHue = new double[] { 22.66187050359712, 37.16723549488056 };
+  //   hsvThresholdSaturation = new double[] { 121.53776978417264, 255.0 };
+  //   hsvThresholdValue = new double[] { 133.00359712230215, 255.0 };
+  // }
