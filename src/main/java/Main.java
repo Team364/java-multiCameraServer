@@ -22,15 +22,15 @@ import team364_rpi.*;
 public final class Main {
 
   // internals
-  private static Object imgLock = new Object();
-  private static ArrayList<RotatedRect> latestRects = new ArrayList<RotatedRect>();
-  private static boolean noTargets = true;
+  //private static Object imgLock = new Object();
+  //private static ArrayList<RotatedRect> latestRects = new ArrayList<RotatedRect>();
+  //private static boolean noTargets = true;
 
-  private static ArrayList<Number> angle = new ArrayList<Number>();
-  private static ArrayList<Number> width = new ArrayList<Number>();
-  private static ArrayList<Number> height = new ArrayList<Number>();
-  private static ArrayList<Number> centerX = new ArrayList<Number>();
-  private static ArrayList<Number> centerY = new ArrayList<Number>();
+  // private static ArrayList<Number> angle = new ArrayList<Number>();
+  // private static ArrayList<Number> width = new ArrayList<Number>();
+  // private static ArrayList<Number> height = new ArrayList<Number>();
+  // private static ArrayList<Number> centerX = new ArrayList<Number>();
+  // private static ArrayList<Number> centerY = new ArrayList<Number>();
 
   private Main() { }
 
@@ -40,8 +40,14 @@ public final class Main {
   public static void main(String... args) {
     Camera myCam = new Camera();
 
-    while (true);
-   }
+    for (;;) {
+      try {
+        Thread.sleep(10);
+      } catch (Exception e) {
+        //TODO: handle exception
+      }
+    }
+  }
 }
 
 
