@@ -137,15 +137,15 @@ public final class CameraStuff {
     System.out.println("Starting camera '" + config.name + "' on " + config.path);
     CameraServer inst = CameraServer.getInstance();
     UsbCamera camera = new UsbCamera(config.name, config.path);
-    MjpegServer server = inst.startAutomaticCapture(camera);
+    //MjpegServer server = inst.startAutomaticCapture(camera);
     Gson gson = new GsonBuilder().create();
 
     camera.setConfigJson(gson.toJson(config.config));
     camera.setConnectionStrategy(VideoSource.ConnectionStrategy.kKeepOpen);
 
-    if (config.streamConfig != null) {
-      server.setConfigJson(gson.toJson(config.streamConfig));
-    }
+    // if (config.streamConfig != null) {
+    //   server.setConfigJson(gson.toJson(config.streamConfig));
+    // }
 
     return camera;
   }

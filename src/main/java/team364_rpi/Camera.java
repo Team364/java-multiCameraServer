@@ -5,7 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.function.IntUnaryOperator;
 import java.util.ArrayList;
 import java.util.List;
 import edu.wpi.first.vision.VisionPipeline;
@@ -22,7 +22,9 @@ import com.google.gson.JsonParser;
 
 import edu.wpi.cscore.MjpegServer;
 import edu.wpi.cscore.UsbCamera;
+import edu.wpi.cscore.VideoCamera;
 import edu.wpi.cscore.VideoSource;
+import edu.wpi.cscore.VideoMode.PixelFormat;
 import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.first.cameraserver.CameraServer;
@@ -55,7 +57,7 @@ public class Camera {
   private double rectangleArea=0.0;
   public static final int cameraResX = 320;
   public static final int cameraResY = 240;
-  private static Mat mat;
+  //private static Mat mat;
   
   public Camera() {
       enableVisionThread(); //outputs a processed feed to the dashboard (overlays the found boiler tape)
@@ -63,26 +65,59 @@ public class Camera {
 
   public void enableVisionThread() {
       //pipeline = new DynamicVisionPipeline();
-      //UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
-      
+      //UsbCamera camera = CameraServer.getInstance().startAutomaticCapture(0);
+      //UsbCamera camera2 = CameraServer.getInstance().startAutomaticCapture(0);
+
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+
+
     //   camera.setResolution(cameraResX, cameraResY);
-    mat = new Mat();
-       CvSink cvSink = CameraServer.getInstance().getVideo(); //capture mats from camera
-       CvSource outputStream = CameraServer.getInstance().putVideo("Stream", cameraResX, cameraResY); //send steam to CameraServer
-    //   Mat mat = new Mat(); //define mat in order to reuse it
+        Mat mat = new Mat();
+        CameraStuff.CameraConfig newConfig = new CameraStuff.CameraConfig();
+        newConfig.name = "cam0";
+        newConfig.path = "/dev/video0";
+        VideoSource cam = CameraStuff.startCamera(newConfig);
+        cam.setConnectionStrategy(VideoSource.ConnectionStrategy.kKeepOpen);
+        cam.setPixelFormat(PixelFormat.kMJPEG);
+        //System.out.println("Last frame time: "+cam.getLastFrameTime());
+        //UsbCamera cam = CameraServer.getInstance().startAutomaticCapture();
+        MjpegServer server =  CameraServer.getInstance().addServer("test");
+
+        //System.out.println("getVideo: "+ CameraServer.getInstance().getVideo(cam).getSource());
+
+        CameraServer.getInstance().addCamera(cam);
+        //System.out.println(CameraServer.getInstance().)
+        CvSink inputStream = CameraServer.getInstance().getVideo(cam);//.getVideo(); //capture mats from camera
+
+        inputStream.grabFrame(mat);
+        System.out.println("Grabbed frame: " + mat.size());
+
+        //CvSink inputStream = CameraServer.getInstance().getVideo();//.getVideo(); //capture mats from camera
+
+        CvSource outputStream = CameraServer.getInstance().putVideo("test", cameraResX, cameraResY);
+        server.setSource(cam);
+        
+        outputStream.putFrame(mat); //send steam to CameraServer
+        //server.setSource(outputStream);
+
+       //MjpegServer server = new MjpegServer(arg0, arg1, arg2);
+
+       //   Mat mat = new Mat(); //define mat in order to reuse it
 
     //   runProcessing = true;
 
        visionThread = new Thread(() -> {
 
            while(!Thread.interrupted()) { //this should only be false when thread is disabled
+            System.out.println("Frame captured");//+ mat.size());
 
-               if(cvSink.grabFrame(mat)==0) { //fill mat with image from camera)
+               if(inputStream.grabFrame(mat) == 0) { //fill mat with image from camera)
     //               outputStream.notifyError(cvSink.getError()); //send an error instead of the mat
     //               SmartDashboard.putString("Vision State", "Acquisition Error");
-    //               continue; //skip to the next iteration of the thread
+                   continue; //skip to the next iteration of the thread
                }
 
+ //              System.out.println("Frame captured" + mat.size());
     //           if(runProcessing) {		
 
     //               pipeline.process(mat); //process the mat (this does not change the mat, and has an internal output to pipeline)
@@ -161,9 +196,9 @@ public class Camera {
     //           //Timer.delay(0.09);
            }
 
-       });	
-    //   visionThread.setDaemon(true);
-    //   visionThread.start();
+      });	
+       visionThread.setDaemon(true);
+       visionThread.start();
   }
   
 
