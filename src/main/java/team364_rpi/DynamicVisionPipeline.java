@@ -2,10 +2,14 @@ package team364_rpi;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import edu.wpi.cscore.CvSource;
+import edu.wpi.cscore.MjpegServer;
 import edu.wpi.first.vision.VisionPipeline;
 import org.opencv.core.Mat;
 import org.opencv.core.*;
 import org.opencv.imgproc.*;
+import edu.wpi.first.cameraserver.CameraServer;
 
 public class DynamicVisionPipeline implements VisionPipeline {
 
@@ -16,6 +20,14 @@ public class DynamicVisionPipeline implements VisionPipeline {
   private ArrayList<RotatedRect> rotatedRectsOutput = new ArrayList<RotatedRect>();
   private ArrayList<Rect> rectsOutput = new ArrayList<Rect>();
   private ArrayList<Target> findTargetsOutput = new ArrayList<Target>();
+  private static MjpegServer server;
+  private static CvSource outputStream;
+
+  public DynamicVisionPipeline() {
+    server = CameraServer.getInstance().addServer("test");
+    outputStream = CameraServer.getInstance().putVideo("myvid", 640, 480);
+    server.setSource(outputStream);
+  }
 
   //public double xValue;
 
@@ -159,6 +171,8 @@ public class DynamicVisionPipeline implements VisionPipeline {
     ArrayList<Rect> rectsToCategorize = rectsOutput;
 
     findTargets(rotRectsToCategorize, rectsToCategorize, findTargetsOutput);
+
+    outputStream.putFrame(source0);
 
   }
 

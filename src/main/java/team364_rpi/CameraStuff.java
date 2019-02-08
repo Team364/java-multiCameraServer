@@ -16,6 +16,7 @@ import com.google.gson.JsonParser;
 import edu.wpi.cscore.MjpegServer;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.cscore.VideoSource;
+import edu.wpi.cscore.VideoMode.PixelFormat;
 import edu.wpi.first.cameraserver.CameraServer;
 
 public final class CameraStuff {
@@ -143,11 +144,12 @@ public final class CameraStuff {
 
     camera.setConfigJson(gson.toJson(config.config));
     camera.setConnectionStrategy(VideoSource.ConnectionStrategy.kKeepOpen);
-
+    camera.setResolution(640,480);
+    //camera.setPixelFormat(PixelFormat.kYUYV);
+    //camera.setFPS(15);
     if (config.streamConfig != null) {
       server.setConfigJson(gson.toJson(config.streamConfig));
     }
-
     return camera;
   }
 
