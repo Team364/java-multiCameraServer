@@ -20,14 +20,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
   private ArrayList<RotatedRect> rotatedRectsOutput = new ArrayList<RotatedRect>();
   private ArrayList<Rect> rectsOutput = new ArrayList<Rect>();
   private ArrayList<Target> findTargetsOutput = new ArrayList<Target>();
-  private static MjpegServer server;
-  private static CvSource outputStream;
-
-  public DynamicVisionPipeline() {
-    server = CameraServer.getInstance().addServer("test");
-    outputStream = CameraServer.getInstance().putVideo("myvid", 640, 480);
-    server.setSource(outputStream);
-  }
+  private static long lastFrameTime = 0;
 
   //public double xValue;
 
@@ -81,16 +74,16 @@ public class DynamicVisionPipeline implements VisionPipeline {
     filterContoursMaxWidth = 999.0;
     filterContoursMinHeight = 0.0;
     filterContoursMaxHeight = 1000.0;
-    filterContoursSolidity = new double[] { 0.0, 100.0 };
+    filterContoursSolidity = new double[] { 80.0, 100.0 };
     filterContoursMaxVertices = 1000000.0;
     filterContoursMinVertices = 0.0;
     filterContoursMinRatio = 0.0;
     filterContoursMaxRatio = 1000.0;
 
     // Tape HSV Values
-    hsvThresholdHue = new double[] { 0.0, 255.0};
-    hsvThresholdSaturation = new double[] { 0.0, 255.0 };
-    hsvThresholdValue = new double[] { 142.2, 255.0 };
+    hsvThresholdHue = new double[] { 0.0, 110.0};
+    hsvThresholdSaturation = new double[] { 50.0, 255.0 };
+    hsvThresholdValue = new double[] { 160.0, 255.0 };
 
   }
 
@@ -140,18 +133,19 @@ public class DynamicVisionPipeline implements VisionPipeline {
    */
   @Override
   public void process(Mat source0) {
-    //System.out.println("0.0: "+source0.get(0,0)[0]);
-    //System.out.println("10.10: "+source0.get(10,10)[0]);
-    //System.out.println("source0: " + source0.s;
+    System.out.println("Time since frame: "+ (System.currentTimeMillis()-lastFrameTime));
+    lastFrameTime = System.currentTimeMillis();
 
+    //Mat hsvThresholdInput = source0.submat(new Range(0,(int)(source0.rows()/2)), new Range(0, source0.cols()));
+    //System.out.println("altered mat size: " + hsvThresholdInput.size());
     // Step HSV_Threshold0:
     Mat hsvThresholdInput = source0;
-    hsvThreshold(hsvThresholdInput, hsvThresholdHue, hsvThresholdSaturation, hsvThresholdValue, hsvThresholdOutput);
+    hsvThreshold(hsvThresholdInput, hsvThresholdHue, hsvThresholdSaturation, hsvThresholdValue, hsvThresholdOutput);//~200ms
 
     // Step Find_Contours0:
     Mat findContoursInput = hsvThresholdOutput;
     boolean findContoursExternalOnly = false;
-    findContours(findContoursInput, findContoursExternalOnly, findContoursOutput);
+    findContours(findContoursInput, findContoursExternalOnly, findContoursOutput);// ~30ms
 
     // Step Filter_Contours0:
     ArrayList<MatOfPoint> filterContoursContours = findContoursOutput;
@@ -162,7 +156,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
     // Step Find RotatedRects in Contours:
     ArrayList<MatOfPoint> rotatedRectContours = filterContoursOutput;
-    System.out.println("# contours: " + filterContoursOutput.size());
+    //System.out.println("# contours: " + filterContoursOutput.size());
 
     generateRects(rotatedRectContours, rotatedRectsOutput, rectsOutput);
 
@@ -172,7 +166,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
     findTargets(rotRectsToCategorize, rectsToCategorize, findTargetsOutput);
 
-    outputStream.putFrame(source0);
+    //outputStream.putFrame(source0);
 
   }
 
@@ -183,8 +177,12 @@ public class DynamicVisionPipeline implements VisionPipeline {
   public ArrayList<RotatedRect> rotatedRectsOutput() { return rotatedRectsOutput; }
 
   private void hsvThreshold(Mat input, double[] hue, double[] sat, double[] val, Mat out) {
-    Imgproc.cvtColor(input, out, Imgproc.COLOR_BGR2HSV);
-    Core.inRange(out, new Scalar(hue[0], sat[0], val[0]), new Scalar(hue[1], sat[1], val[1]), out);
+    //input.get(0,0);
+    // Convert the whole image from BGR to HSV
+    Imgproc.cvtColor(input, out, Imgproc.COLOR_BGR2HSV);//~100ms
+
+    // Check if each individual pixel falls within HSV range
+    Core.inRange(out, new Scalar(hue[0], sat[0], val[0]), new Scalar(hue[1], sat[1], val[1]), out);//~100ms, ~70f/640
   }
 
   private void findContours(Mat input, boolean externalOnly, List<MatOfPoint> contours) {
@@ -253,7 +251,6 @@ public class DynamicVisionPipeline implements VisionPipeline {
     Rect r = new Rect();
     for ( int i = 0; i < inputContours.size(); i++ ){
 
-      // EDIT THE LINE BELOW THIS TO FIX MAT STUFF
       MatOfPoint2f curContour2f = new MatOfPoint2f(inputContours.get(i).toArray());
       rotR = Imgproc.minAreaRect(curContour2f);
       r = Imgproc.boundingRect(inputContours.get(i));
@@ -261,8 +258,13 @@ public class DynamicVisionPipeline implements VisionPipeline {
       outputRects.add(r);
       outputRotatedRects.add(rotR);
 
-      System.out.println(i + ": Angle: " + rotR.angle + " h: " + r.height + " w: " +r.width+  " ctr: " + rotR.center + " size: " + rotR.size + "\n");
+      System.out.println(i + ": Angle: " + rotR.angle + " h: " + rotR.size.height + " w: " +rotR.size.width+  " ctr: " + rotR.center );//+ " size: " + rotR.size + "\n");
     }
+  }
+
+  public boolean isLeftSided(RotatedRect r) {
+    // in a left-side rectangle, the longer side is considered the "width"
+    return r.size.width > r.size.height;
   }
 
   public void findTargets(ArrayList<RotatedRect> inputRotatedRects, ArrayList<Rect> inputRects, ArrayList<Target> outputTargets){
@@ -270,31 +272,34 @@ public class DynamicVisionPipeline implements VisionPipeline {
     outputTargets.clear();
 
     // find a left-side rectangle:
-    // ArrayList<RotatedRect> rightLeaningRects = new ArrayList<RotatedRect>();
     for (int i = 0; i < inputRects.size(); i++){
       RotatedRect leftRect = inputRotatedRects.get(i);
-      // in a left-side rectangle, the longer side is considered the "width"
-      if (leftRect.size.width > leftRect.size.height) {
-        //System.out.println("Found a left");
-        // For each left-side rect, are there any nearby right-side rects?
+
+      if (isLeftSided(leftRect)) {
         for (int j = 0; j < inputRects.size(); j++){
           RotatedRect rightRect = inputRotatedRects.get(j);
-          if (rightRect.size.width < rightRect.size.height) {
-            //System.out.println("Found a right");
+          if (!isLeftSided(rightRect)) {
 
-            // Found a right-side rect.. is it close? (i.e., is it less than 2 "widths" away?)
+            // TARGET CHECK 1: Found a right-side rect.. is it close? (i.e., is it less than 2 "widths" away?)
             // "width" (which is the length of the tape) is a poor man's way of determining this.
-            if (leftRect.center.x + leftRect.size.width * 3 > rightRect.center.x) {
-              // Found a target! Let's figure out some stuff about it.
-              Target foundTarget = new Target();
-              foundTarget.centerX = leftRect.center.x + (rightRect.center.x - leftRect.center.x)/2;
-              foundTarget.centerY = leftRect.center.y; // this may be inaccurate.
-              foundTarget.distance = 0; // TODO: Actually do this...
-              foundTarget.faceAngle = 90; // TODO: Actually do this...
-              foundTarget.height = inputRects.get(i).height;
+            if (leftRect.center.x + leftRect.size.width * 3 > rightRect.center.x && leftRect.center.x < rightRect.center.x) {
+              // TARGET CHECK 2: Are our centerpoints aligned vertically?
+              double leftHalfHeight = inputRects.get(i).height / 2;
+              if (rightRect.center.y < leftRect.center.y + leftHalfHeight
+                  && rightRect.center.y > leftRect.center.y - leftHalfHeight) {
+                // We *think* Found a target! Let's figure out some stuff about it.
+                Target foundTarget = new Target();
+                foundTarget.centerX = leftRect.center.x + (rightRect.center.x - leftRect.center.x) / 2;
+                foundTarget.centerY = (leftRect.center.y + rightRect.center.y)/2;
+                foundTarget.faceAngle = 90; // TODO: Actually do this...
+                foundTarget.height = (inputRects.get(i).height + inputRects.get(j).height) / 2;
+                foundTarget.distance = 1890 / foundTarget.height;
+                // foundTarget.distance = -50 * Math.log(foundTarget.height) + 141.29;
 
-              //System.out.println("Found a target! x:"+foundTarget.centerX+" y:"+foundTarget.centerY);
-              System.out.println("Target Found, height: " + foundTarget.height);
+                // System.out.println("Found a target! x:"+foundTarget.centerX+"
+                // y:"+foundTarget.centerY);
+                System.out.println("Target Found, height: " + foundTarget.height + " D: " + foundTarget.distance);
+              }
             }
           }
         }

@@ -144,7 +144,8 @@ public final class CameraStuff {
 
     camera.setConfigJson(gson.toJson(config.config));
     camera.setConnectionStrategy(VideoSource.ConnectionStrategy.kKeepOpen);
-    camera.setResolution(640,480);
+    camera.setVideoMode(PixelFormat.kYUYV, 320, 240, 30); //1024x576(15), 640x480(30), 800x448(30/24/20/15/10), 352x288, 176x144 (threshold b/w 30 fps and 15 fps), 160x120
+    //camera.setResolution(640,480);
     //camera.setPixelFormat(PixelFormat.kYUYV);
     //camera.setFPS(15);
     if (config.streamConfig != null) {

@@ -101,11 +101,8 @@ public final class Main {
         // We have to LOCK to make sure 2nd thread doesn't change
         // outputRects while we're reading from it
         synchronized (imgLock) {
-          if(latestRects.size() > 0){
-            noTargets = false;
-          }else{
-            noTargets = true;
-          }
+          noTargets = !(latestRects.size()>0);
+
           for (int i = 0; i < latestRects.size(); i++) {
             RotatedRect r = latestRects.get(i);
             angle.add(r.angle);
