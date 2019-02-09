@@ -17,7 +17,41 @@ import edu.wpi.first.vision.VisionThread;
 
 import org.opencv.core.*;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.IntUnaryOperator;
+import java.util.ArrayList;
+import java.util.List;
+import edu.wpi.first.vision.VisionPipeline;
+
+import org.opencv.core.Mat;
+import org.opencv.core.*;
+import org.opencv.imgproc.*;
+import org.opencv.videoio.VideoCapture;
+import org.opencv.videoio.VideoWriter;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import edu.wpi.cscore.MjpegServer;
+import edu.wpi.cscore.UsbCamera;
+import edu.wpi.cscore.VideoCamera;
+import edu.wpi.cscore.VideoSource;
+import edu.wpi.cscore.VideoMode.PixelFormat;
+import edu.wpi.cscore.CvSink;
+import edu.wpi.cscore.CvSource;
+import edu.wpi.first.cameraserver.CameraServer;
+
+
 import team364_rpi.*;
+import team364_rpi.Camera.CameraConfig;
 
 public final class Main {
 
@@ -34,21 +68,111 @@ public final class Main {
 
   private Main() { }
 
+  public static class CameraConfig {
+    public String name;
+    public String path;
+    public JsonObject config;
+    public JsonElement streamConfig;
+}
   /**
    * Main.
    */
   public static void main(String... args) {
-    Camera myCam = new Camera();
-
-    for (;;) {
+    //Camera myCam = new Camera();
       try {
-        Thread.sleep(10);
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        
+        //Object imglock = new Object();
+
+        CameraConfig newConfig = new CameraConfig();
+        newConfig.name = "cam0";
+        newConfig.path = "/dev/video0";
+
+        UsbCamera camera = new UsbCamera(newConfig.name, newConfig.path);
+        //camera.setResolution(1024, 576);
+        //camera.setPixelFormat(PixelFormat.kMJPEG);
+        camera.setFPS(10);
+
+        camera.setVideoMode(PixelFormat.kYUYV, 1024, 576, 10);//640x480, 1024x576, 1920x1080
+
+        final DynamicVisionPipeline pipeline = new DynamicVisionPipeline();
+
+        //VideoCapture capture = new VideoCapture(0);
+        //VideoWriter writer = new VideoWriter();
+        
+        // Mat mat = new Mat();
+        
+        //CameraServer inst = CameraServer.getInstance();
+        //readConfigFile();
+        //VideoSource cam = prepareCamera(cameraConfigs.get(0));
+        //inst.startAutomaticCapture(cam);
+
+        CameraServer.getInstance().addCamera(camera);
+        //CameraServer.getInstance().startAutomaticCapture(camera);
+        
+        Mat output = new Mat();
+        
+        // new Thread(() -> {
+           CvSink cvSink = CameraServer.getInstance().getVideo();
+
+
+        //   while(!Thread.interrupted()) {
+        //     Mat source = new Mat();
+
+        //       //capture.read(source);
+        //       //writer.write(source);
+        //       //cvSource.
+        //       //System.out.println("Matrix size: "+source.size());
+              
+        //       //long start = System.currentTimeMillis();
+        //       //cvSink.grabFrame(source);
+        //       //long start = System.currentTimeMillis();
+
+        //       if (cvSink.grabFrame(source) == 0) continue;
+        //       //System.out.println("grab time: "+ (System.currentTimeMillis() - start));
+              
+        //       // //Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2GRAY);
+        //       //synchronized(imglock){
+        //       pipeline.process(source);
+        //       //}
+  
+        //       //start = System.currentTimeMillis();
+        //       //cvSource.putFrame(source);
+        //       //cvSource.putFrame(output);
+        //       //System.out.println("put time: "+ (System.currentTimeMillis() - start));
+        //   }
+        // }).start();
+
+        // new Thread(() -> {
+        CvSource cvSource = CameraServer.getInstance().putVideo("Blur", 640, 480);
+        
+        //   Mat output = new Mat();
+
+        //   while(!Thread.interrupted()) {
+        //     //synchronized (imglock){
+        //       output = pipeline.getOutput();
+        //       //if (pipeline.getOutput(output) == 0) continue;
+        //       //System.out.println(cvSource.)
+        //     //}
+        //     //cvSource.putFrame(output);
+        //   }
+        // }).start();
+
+        while (true){
+          long start = System.currentTimeMillis();
+          if (cvSink.grabFrame(output)==0) continue;
+          System.out.println("grab frame: " +(System.currentTimeMillis()-start));
+          cvSource.putFrame(output);
+          //Thread.sleep(5);
+        }
+
+        //Thread.sleep(10);
       } catch (Exception e) {
         //TODO: handle exception
       }
     }
   }
-}
+
 
 
 

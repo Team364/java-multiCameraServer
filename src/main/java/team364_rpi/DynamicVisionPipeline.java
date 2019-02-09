@@ -16,11 +16,19 @@ public class DynamicVisionPipeline implements VisionPipeline {
   private ArrayList<RotatedRect> rotatedRectsOutput = new ArrayList<RotatedRect>();
   private ArrayList<Rect> rectsOutput = new ArrayList<Rect>();
   private ArrayList<Target> findTargetsOutput = new ArrayList<Target>();
+  private Object lock = new Object();
+  private Mat outputMat = new Mat();
 
   //public double xValue;
 
   // Inputs
   private int searchConfigNumber = 0;
+
+  public Mat getOutput() {
+    Mat o = new Mat();
+    synchronized(lock){outputMat.copyTo(o);}
+    return o;
+  }
 
   public void setSearchConfigNumber (int inSearchConfigNumber) {
     // Set up parameters depending on our target (default TAPE):
@@ -115,7 +123,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
     ArrayList<Rect> rectsToCategorize = rectsOutput;
     findTargets(rotRectsToCategorize, rectsToCategorize, findTargetsOutput);
 
-    //Imgproc.rectangle(img, pt1, pt2, color);
+    // //Imgproc.rectangle(img, pt1, pt2, color);
     Imgproc.rectangle(
       source0, 
       new Point(10,10), 
@@ -123,7 +131,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
       new Scalar(0,255,0),
       10
     );
-
+    outputMat = source0;
   }
 
   public Mat hsvThresholdOutput() { return hsvThresholdOutput; }

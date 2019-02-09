@@ -9,9 +9,12 @@ import java.util.function.IntUnaryOperator;
 import java.util.ArrayList;
 import java.util.List;
 import edu.wpi.first.vision.VisionPipeline;
+
 import org.opencv.core.Mat;
 import org.opencv.core.*;
 import org.opencv.imgproc.*;
+import org.opencv.videoio.VideoCapture;
+import org.opencv.videoio.VideoWriter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -54,30 +57,22 @@ public class Camera {
 
     public void enableVisionThread() {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+                
+        CameraConfig newConfig = new CameraConfig();
+        newConfig.name = "cam0";
+        newConfig.path = "/dev/video0";
 
-        pipeline = new DynamicVisionPipeline();
-        Mat mat = new Mat();
-        
-        CameraServer inst = CameraServer.getInstance();
-        readConfigFile();
+        // MjpegServer server = CameraServer.getInstance().addServer("test");
 
-        // CameraStuff.CameraConfig newConfig = new CameraStuff.CameraConfig();
-        // newConfig.name = "cam0";
-        // newConfig.path = "/dev/video0";
-        VideoSource cam = prepareCamera(cameraConfigs.get(0));
-        inst.startAutomaticCapture(cam);
+        // // System.out.println("getVideo: "+
+        // // CameraServer.getInstance().getVideo(cam).getSource());
 
-        MjpegServer server = CameraServer.getInstance().addServer("test");
+        // //     CameraServer.getInstance().addCamera(cam);
 
-        // System.out.println("getVideo: "+
-        // CameraServer.getInstance().getVideo(cam).getSource());
-
-        //     CameraServer.getInstance().addCamera(cam);
-
-        // System.out.println(CameraServer.getInstance().)
-        CvSink inputStream = inst.getVideo(cam);// .getVideo(); //capture mats from camera
-        CvSource outputStream = inst.putVideo("Processed Image", 1024, 576);
-        server.setSource(outputStream);
+        // // System.out.println(CameraServer.getInstance().)
+        // CvSink inputStream = inst.getVideo(cam);// .getVideo(); //capture mats from camera
+        // CvSource outputStream = inst.putVideo("Processed Image", 1024, 576);
+        // server.setSource(outputStream);
 
         // inputStream.grabFrame(mat);
         // System.out.println("Grabbed frame: " + mat.size());
@@ -95,22 +90,88 @@ public class Camera {
         // Mat mat = new Mat(); //define mat in order to reuse it
 
         // runProcessing = true;
+        new Thread(() -> {
+            //UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
+            //VideoSource camera = new VideoSource();
+            UsbCamera camera = new UsbCamera(newConfig.name, newConfig.path);
+            camera.setResolution(1024, 576);
+            //camera.setPixelFormat(PixelFormat.kMJPEG);
+            camera.setFPS(10);
+            camera.setVideoMode(PixelFormat.kYUYV, 1024, 576, 10);
 
-        visionThread = new Thread(() -> {
+            pipeline = new DynamicVisionPipeline();
 
-            while (!Thread.interrupted()) { // this should only be false when thread is disabled
+            //VideoCapture capture = new VideoCapture(0);
+            //VideoWriter writer = new VideoWriter();
+            
+            // Mat mat = new Mat();
+            
+            //CameraServer inst = CameraServer.getInstance();
+            //readConfigFile();
+            //VideoSource cam = prepareCamera(cameraConfigs.get(0));
+            //inst.startAutomaticCapture(cam);
 
-                if (inputStream.grabFrame(mat) == 0) { // fill mat with image from camera)
-                    //outputStream.notifyError(inputStream.getError()); // send an error instead of the mat
-                    continue; // skip to the next iteration of the thread
-                }
-                System.out.println("Grabbed Frame");
-                outputStream.putFrame(mat); // give (and CameraServer) a new frame
+            CameraServer.getInstance().addCamera(camera);
+            CvSink cvSink = CameraServer.getInstance().getVideo();
+            CvSource outputStream = CameraServer.getInstance().putVideo("Blur", 1024, 576);
+            
+            Mat source = new Mat();
+            Mat output = new Mat();
+            
+            while(!Thread.interrupted()) {
+                //capture.read(source);
+                //writer.write(source);
+
+                System.out.println("Matrix size: "+source.size());
+                
+                long start = System.currentTimeMillis();
+                //cvSink.grabFrame(source);
+                if (cvSink.grabFrame(source) == 0) continue;
+                System.out.println("grab time: "+ (System.currentTimeMillis() - start));
+                
+                // //Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2GRAY);
+                pipeline.process(source);
+//                output = pipeline.getOutput();
+
+                start = System.currentTimeMillis();
+                 outputStream.putFrame(output);
+                 System.out.println("put time: "+ (System.currentTimeMillis() - start));
+
             }
+        }).start();
 
-        });
-        visionThread.setDaemon(true);
-        visionThread.start();
+        // new Thread(() -> {
+        //     UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
+        //     camera.setResolution(640, 480);
+            
+        //     CvSink cvSink = CameraServer.getInstance().getVideo();
+        //     CvSource outputStream = CameraServer.getInstance().putVideo("Blur", 640, 480);
+            
+        //     Mat source = new Mat();
+        //     Mat output = new Mat();
+            
+        //     while(!Thread.interrupted()) {
+        //         cvSink.grabFrame(source);
+        //         Imgproc.cvtColor(source, output, Imgproc.COLOR_BGR2GRAY);
+        //         outputStream.putFrame(output);
+        //     }
+        // }).start();
+
+        // visionThread = new Thread(() -> {
+
+        //     while (!Thread.interrupted()) { // this should only be false when thread is disabled
+
+        //         if (inputStream.grabFrame(mat) == 0) { // fill mat with image from camera)
+        //             //outputStream.notifyError(inputStream.getError()); // send an error instead of the mat
+        //             continue; // skip to the next iteration of the thread
+        //         }
+        //         System.out.println("Grabbed Frame");
+        //         outputStream.putFrame(mat); // give (and CameraServer) a new frame
+        //     }
+
+        // });
+        // visionThread.setDaemon(true);
+        // visionThread.start();
     }
 
     /**
@@ -205,7 +266,7 @@ public class Camera {
 
         camera.setFPS(30);
         //camera.setConfigJson(gson.toJson(config.config));
-        camera.setResolution(1024, 576);
+        camera.setResolution(640, 480);
         //camera.setPixelFormat(PixelFormat.kMJPEG);
         camera.setConnectionStrategy(VideoSource.ConnectionStrategy.kKeepOpen);
 
