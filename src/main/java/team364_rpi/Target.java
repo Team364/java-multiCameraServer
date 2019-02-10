@@ -7,5 +7,6 @@ public class Target {
     double distance = 0;
     double faceAngle = 0;
     double height = 0;
+    double width = 0;
 
 }

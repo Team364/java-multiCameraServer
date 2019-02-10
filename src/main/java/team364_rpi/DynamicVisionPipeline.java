@@ -258,7 +258,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
       outputRects.add(r);
       outputRotatedRects.add(rotR);
 
-      System.out.println(i + ": Angle: " + rotR.angle + " h: " + rotR.size.height + " w: " +rotR.size.width+  " ctr: " + rotR.center );//+ " size: " + rotR.size + "\n");
+      //System.out.println(i + ": Angle: " + rotR.angle + " h: " + rotR.size.height + " w: " +rotR.size.width+  " ctr: " + rotR.center );//+ " size: " + rotR.size + "\n");
     }
   }
 
@@ -294,11 +294,13 @@ public class DynamicVisionPipeline implements VisionPipeline {
                 foundTarget.faceAngle = 90; // TODO: Actually do this...
                 foundTarget.height = (inputRects.get(i).height + inputRects.get(j).height) / 2;
                 foundTarget.distance = 1890 / foundTarget.height;
+                foundTarget.width = rightRect.center.x - leftRect.center.x;
+
                 // foundTarget.distance = -50 * Math.log(foundTarget.height) + 141.29;
 
                 // System.out.println("Found a target! x:"+foundTarget.centerX+"
                 // y:"+foundTarget.centerY);
-                System.out.println("Target Found, height: " + foundTarget.height + " D: " + foundTarget.distance);
+                System.out.println("Target Found, height: " + foundTarget.height + " D: " + foundTarget.distance + " W: "+foundTarget.width);
               }
             }
           }
