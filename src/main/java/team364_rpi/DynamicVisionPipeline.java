@@ -81,9 +81,9 @@ public class DynamicVisionPipeline implements VisionPipeline {
     filterContoursMaxRatio = 1000.0;
 
     // Tape HSV Values
-    hsvThresholdHue = new double[] { 0.0, 110.0};
-    hsvThresholdSaturation = new double[] { 50.0, 255.0 };
-    hsvThresholdValue = new double[] { 160.0, 255.0 };
+    hsvThresholdHue = new double[] { 0.0, 180.0};
+    hsvThresholdSaturation = new double[] { 0.0, 116.0 };
+    hsvThresholdValue = new double[] { 169.0, 255.0 };
 
   }
 
@@ -289,18 +289,19 @@ public class DynamicVisionPipeline implements VisionPipeline {
                   && rightRect.center.y > leftRect.center.y - leftHalfHeight) {
                 // We *think* Found a target! Let's figure out some stuff about it.
                 Target foundTarget = new Target();
-                foundTarget.centerX = leftRect.center.x + (rightRect.center.x - leftRect.center.x) / 2;
+                foundTarget.centerX = (leftRect.center.x + rightRect.center.x)/2; //leftRect.center.x + (rightRect.center.x - leftRect.center.x) / 2;
                 foundTarget.centerY = (leftRect.center.y + rightRect.center.y)/2;
-                foundTarget.faceAngle = 90; // TODO: Actually do this...
                 foundTarget.height = (inputRects.get(i).height + inputRects.get(j).height) / 2;
-                foundTarget.distance = 1890 / foundTarget.height;
                 foundTarget.width = rightRect.center.x - leftRect.center.x;
+                foundTarget.distance = 1890 / foundTarget.height;
+                foundTarget.faceAngle = (foundTarget.width/foundTarget.distance - 1.16) * 139; // TODO: Verify this works... ADD +/- depending on left/right of center
+
 
                 // foundTarget.distance = -50 * Math.log(foundTarget.height) + 141.29;
 
                 // System.out.println("Found a target! x:"+foundTarget.centerX+"
                 // y:"+foundTarget.centerY);
-                System.out.println("Target Found, height: " + foundTarget.height + " D: " + foundTarget.distance + " W: "+foundTarget.width);
+                System.out.println("Target Found, height: " + foundTarget.height + " D: " + foundTarget.distance + " Ang: "+foundTarget.faceAngle);
               }
             }
           }
