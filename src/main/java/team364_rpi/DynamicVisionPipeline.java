@@ -301,7 +301,8 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
                 // System.out.println("Found a target! x:"+foundTarget.centerX+"
                 // y:"+foundTarget.centerY);
-                System.out.println("Target Found, height: " + foundTarget.height + " D: " + foundTarget.distance + " Ang: "+foundTarget.faceAngle);
+                //*original height variable* -> foundTarget.height
+                System.out.println("Target Found, height: " + inputRects.get(i).height + " " + inputRects.get(j).height + " D: " + foundTarget.distance + " Ang: "+foundTarget.faceAngle);
               }
             }
           }
