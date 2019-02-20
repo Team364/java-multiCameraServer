@@ -21,13 +21,12 @@
 - Port number: 22
 - User name: pi
 - Password: raspberry
-
 <img src="../images/step1.png" width="500" />
 
-1. When prompted to accept key, click Yes
+2. When prompted to accept key, click Yes
 <img src="../images/step2.png" width="500" />
 
-1. You should now be connected. You can drag and drop "configReadByJAR.json" 
+3. You should now be connected. You can drag and drop "configReadByJAR.json" 
 from the left pane onto the right. This will transfer the document over.
 <img src="../images/step3.png" width="500" />
 
