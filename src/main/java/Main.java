@@ -15,8 +15,6 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.vision.VisionThread;
 
-import org.opencv.core.*;
-
 import team364_rpi.*;
 
 public final class Main {
@@ -40,14 +38,14 @@ public final class Main {
    */
   public static void main(String... args) {
 
-    // // setup and start NetworkTables
+    // setup and start NetworkTables
     NetworkTableInstance ntinst = NetworkTableInstance.getDefault();
     NetworkTable visionTable = ntinst.getTable("visionParameters");
 
-    // // Input entries
+    // Input entries
     // NetworkTableEntry searchConfigNumber = visionTable.getEntry("searchConfigNumber"); // 0: tape, 1: ball, 2: disk
     
-    // // Output entries
+    // Output entries
     NetworkTableEntry visibleTargets_distance = visionTable.getEntry("visibleTargets.distance");
     NetworkTableEntry visibleTargets_faceAngle = visionTable.getEntry("visibleTargets.faceAngle");
     NetworkTableEntry visibleTargets_width = visionTable.getEntry("visibleTargets.width");
@@ -56,34 +54,27 @@ public final class Main {
     NetworkTableEntry visibleTargets_centerY = visionTable.getEntry("visibleTargets.centerY");
     NetworkTableEntry visibleTargets_foundTargets = visionTable.getEntry("visibleTargets.foundTargets");
 
-    // System.out.println("Setting up NetworkTables client for team " + 364);
+    System.out.println("Setting up NetworkTables client.");
     ntinst.startClientTeam(364);
 
-    // TODO: Delete the code below - we don't need to pass a config file for the camera via cmd line.
-    // Pass config file to the camera handler
-    // if (args.length > 0) {
-    //   System.out.println("args[0]: " + args[0]);
-    //   CameraStuff.setConfigFile(args[0]);
-    // } else { System.out.println("No args provided. ");}
-
-    // read config file
+    // Read default camera config file
     if (!CameraStuff.readConfigFile()) {
       return;
     }
 
-    // start cameras
+    // Start cameras
     List<VideoSource> cameras = new ArrayList<>();
     for (CameraStuff.CameraConfig cameraConfig : CameraStuff.cameraConfigs) {
       cameras.add(CameraStuff.startCamera(cameraConfig));
     }
 
-    // start image processing on camera 0 if present
+    // Start image processing on camera 0 if present
     if (cameras.size() >= 1) {
       VisionThread visionThread = new VisionThread(cameras.get(0), new DynamicVisionPipeline(), processingPipeline -> {
         synchronized (imgLock) {
             // Setup pipeline to process TAPE, BALL, or DISK depending on NetworkTable input
-            // TODO: Make this work... if we need it.
-            processingPipeline.setSearchConfigNumber(0);//(int)searchConfigNumber.getDouble(0));
+            // TODO: Make this work... if we need it. Right now it's set permanently to TAPE.
+            processingPipeline.setSearchConfigNumber(0); //(int)searchConfigNumber.getDouble(0));
 
             // Read out the latest output from the pipeline
             latestTargets = processingPipeline.findTargetsOutput();
@@ -92,7 +83,7 @@ public final class Main {
       visionThread.start();
     }
 
-    // loop forever and ever ane ever
+    // Loop forever and ever and ever
     for (;;) {
       try {
         distance.clear();
@@ -102,6 +93,7 @@ public final class Main {
         centerX.clear();
         centerY.clear();
 
+        // Populate data arrays with our latest target information
         // We have to LOCK to make sure 2nd thread doesn't change
         // latestTargets while we're reading from it
         synchronized (imgLock) {
@@ -119,7 +111,7 @@ public final class Main {
           }
         }
 
-        // Write to NetworkTable
+        // Write data arrays to NetworkTables
         visibleTargets_foundTargets.setBoolean(foundTargets);
         visibleTargets_distance.setDoubleArray(distance.stream().mapToDouble(i -> (double)i).toArray());
         visibleTargets_faceAngle.setDoubleArray(faceAngle.stream().mapToDouble(i -> (double)i).toArray());
