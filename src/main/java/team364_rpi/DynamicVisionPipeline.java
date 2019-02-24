@@ -270,7 +270,6 @@ public class DynamicVisionPipeline implements VisionPipeline {
                 foundTarget.centerX = (leftRect.center.x + rightRect.center.x)/2;
                 foundTarget.centerY = (leftRect.center.y + rightRect.center.y)/2;
                 foundTarget.height = (inputRects.get(i).height + inputRects.get(j).height)/2;
-                //foundTarget.width = rightRect.center.x - leftRect.center.x;
                 foundTarget.width = (inputRects.get(j).x - inputRects.get(i).x);
 
                 // empirical calculations for distance and faceAngle
