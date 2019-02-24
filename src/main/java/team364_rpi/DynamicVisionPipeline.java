@@ -59,8 +59,10 @@ public class DynamicVisionPipeline implements VisionPipeline {
   @Override
   public void process(Mat source0) {
 
-    System.out.println("Time since frame: "+ (System.currentTimeMillis() - lastFrameTime));
+    long curFrameTime = System.currentTimeMillis();
+    System.out.println("Time since frame: "+ (curFrameTime - lastFrameTime));
     lastFrameTime = System.currentTimeMillis();
+
     System.out.println("Last target info: " + lastTarget.width + " " + lastTarget.height);
 
     Mat subSource = new Mat();
@@ -103,7 +105,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
     // Step 5: Find targets based on visible rectangles
     ArrayList<RotatedRect> rotRectsToCategorize = rotatedRectsOutput;
     ArrayList<Rect> rectsToCategorize = rectsOutput;
-    findTargets(rotRectsToCategorize, rectsToCategorize, findTargetsOutput);
+    findTargets(curFrameTime, rotRectsToCategorize, rectsToCategorize, findTargetsOutput);
 
     // Save the most likely target for faster processing in the next iteration
     try {
@@ -246,11 +248,12 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
   /**
    * Finds FRC 2019 targets based on rotation and location of given rectangles.
+   * @param timeStamp time in milliseconds at which the frame was captured
    * @param inputRotatedRects rotated rectangles drawn around potential tapes
    * @param inputRects straight rectangles drawn around potential tapes
    * @param outputTargets found targets (includes location and size information)
    */
-  private void findTargets(ArrayList<RotatedRect> inputRotatedRects, ArrayList<Rect> inputRects, ArrayList<Target> outputTargets){
+  private void findTargets(long timeStamp, ArrayList<RotatedRect> inputRotatedRects, ArrayList<Rect> inputRects, ArrayList<Target> outputTargets){
     outputTargets.clear();
 
     // find a left-side rectangle:
@@ -274,18 +277,20 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
                 // We *think* we found a target! Let's figure out some stuff about it.
                 Target foundTarget = new Target();
-                foundTarget.centerX = (leftRect.center.x + rightRect.center.x)/2;
-                foundTarget.centerY = (leftRect.center.y + rightRect.center.y)/2;
-                foundTarget.height = (inputRects.get(i).height + inputRects.get(j).height)/2;
-                foundTarget.width = (inputRects.get(j).x - inputRects.get(i).x);
+                foundTarget.timeStamp = timeStamp;
+                foundTarget.centerX = (int) ((leftRect.center.x + rightRect.center.x)/2.0);
+                foundTarget.centerY = (int) ((leftRect.center.y + rightRect.center.y)/2.0);
+                foundTarget.height = (int) ((inputRects.get(i).height + inputRects.get(j).height)/2.0);
+                foundTarget.width = (int) ((inputRects.get(j).x - inputRects.get(i).x));
 
                 // Empirical calculations for distance and faceAngle
-                foundTarget.distance = 6000/foundTarget.height;
-                foundTarget.faceAngle = (0.00689 - Math.sqrt(0.00121148-0.000608 * foundTarget.width/foundTarget.height))*-3289;
+                foundTarget.distance = (int) (6000.0/foundTarget.height);
+                foundTarget.faceAngle = (int) ((0.00689 - Math.sqrt(0.00121148-0.000608 * foundTarget.width/foundTarget.height))*-3289.0);
                 if (inputRects.get(i).height > inputRects.get(j).height) foundTarget.faceAngle = -1 * foundTarget.faceAngle;
 
-                System.out.println("Target Found, h: " + foundTarget.height + 
-                                  " w/h: "+ foundTarget.width/foundTarget.height + 
+                System.out.println("Target Found, t: " + foundTarget.timeStamp +
+                                  " h: " + foundTarget.height + 
+                                  " w/h: "+ 1.0*foundTarget.width/foundTarget.height + 
                                   " d: " + foundTarget.distance + 
                                   " Ang: " + foundTarget.faceAngle);
 

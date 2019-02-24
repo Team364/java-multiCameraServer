@@ -3,26 +3,21 @@ package team364_rpi;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 import edu.wpi.cscore.MjpegServer;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.cscore.VideoSource;
-import edu.wpi.cscore.VideoMode.PixelFormat;
 import edu.wpi.first.cameraserver.CameraServer;
 
 public class Camera {
 
     // Internals
-    private String configFile = "/home/pi/configReadByJAR.json";
+    private String configFile = "";
 
     private static class CameraConfig {
         public String name = "";
@@ -122,6 +117,10 @@ public class Camera {
         return true;
     }
     
+    /**
+     * Starts capture on camera using read config file.
+     * @return WPI VideoSource to be used in a VisionPipeline
+     */
     public VideoSource startCamera() {
         System.out.println("Starting camera '" + camConfig.name + "' on " + camConfig.path);
         CameraServer inst = CameraServer.getInstance();
