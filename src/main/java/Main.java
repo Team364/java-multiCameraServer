@@ -7,7 +7,7 @@
 /*----------------------------------------------------------------------------*/
 
 import java.util.ArrayList;
-import java.util.List;
+//import java.util.List;
 
 import edu.wpi.cscore.VideoSource;
 import edu.wpi.first.networktables.NetworkTable;
@@ -41,9 +41,6 @@ public final class Main {
     // setup and start NetworkTables
     NetworkTableInstance ntinst = NetworkTableInstance.getDefault();
     NetworkTable visionTable = ntinst.getTable("visionParameters");
-
-    // Input entries
-    // NetworkTableEntry searchConfigNumber = visionTable.getEntry("searchConfigNumber"); // 0: tape, 1: ball, 2: disk
     
     // Output entries
     NetworkTableEntry visibleTargets_distance = visionTable.getEntry("visibleTargets.distance");
@@ -54,34 +51,18 @@ public final class Main {
     NetworkTableEntry visibleTargets_centerY = visionTable.getEntry("visibleTargets.centerY");
     NetworkTableEntry visibleTargets_foundTargets = visionTable.getEntry("visibleTargets.foundTargets");
 
-    System.out.println("Setting up NetworkTables client.");
-    //ntinst.startClientTeam(364);
+    // System.out.println("Setting up NetworkTables client.");
+    // ntinst.startClientTeam(364);
 
-    // Read default camera config file
-    if (!CameraStuff.readConfigFile()) {
-      return;
-    }
-
-    // Start cameras
-    List<VideoSource> cameras = new ArrayList<>();
-    for (CameraStuff.CameraConfig cameraConfig : CameraStuff.cameraConfigs) {
-      cameras.add(CameraStuff.startCamera(cameraConfig));
-    }
-
-    // Start image processing on camera 0 if present
-    if (cameras.size() >= 1) {
-      VisionThread visionThread = new VisionThread(cameras.get(0), new DynamicVisionPipeline(), processingPipeline -> {
-        synchronized (imgLock) {
-            // Setup pipeline to process TAPE, BALL, or DISK depending on NetworkTable input
-            // TODO: Make this work... if we need it. Right now it's set permanently to TAPE.
-            processingPipeline.setSearchConfigNumber(0); //(int)searchConfigNumber.getDouble(0));
-
-            // Read out the latest output from the pipeline
-            latestTargets = processingPipeline.findTargetsOutput();
-          }
-        });
-      visionThread.start();
-    }
+    Camera cam0 = new Camera("/home/pi/configCamera0.json");
+    VideoSource sourceCam0 = cam0.startCamera();
+    VisionThread visionThread = new VisionThread(sourceCam0, new DynamicVisionPipeline(), processingPipeline -> {
+    synchronized (imgLock) {
+        // Read out the latest output from the pipeline
+        latestTargets = new ArrayList<Target>(processingPipeline.findTargetsOutput());
+      }
+    });
+    visionThread.start();
 
     // Loop forever and ever and ever
     for (;;) {
@@ -99,9 +80,7 @@ public final class Main {
         synchronized (imgLock) {
           foundTargets = latestTargets.size() > 0;
 
-          for (int i = 0; i < latestTargets.size(); i++) {
-            Target t = latestTargets.get(i);
-          
+          for (Target t : latestTargets) { 
             distance.add(t.distance);
             faceAngle.add(t.faceAngle);
             width.add(t.width);
