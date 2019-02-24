@@ -18,6 +18,12 @@ public class DynamicVisionPipeline implements VisionPipeline {
   private ArrayList<Rect> rectsOutput = new ArrayList<Rect>();
   private ArrayList<Target> findTargetsOutput = new ArrayList<Target>();
   private static long lastFrameTime = 0;
+  private Target lastTarget = new Target();
+  // private static int lCenterX = 0;
+  // private static int lCenterY = 0;
+  // private static int lwidth = 0;
+  // private static int lheight = 0;
+
 
   // Inputs
   private int searchConfigNumber = 0;
@@ -88,11 +94,31 @@ public class DynamicVisionPipeline implements VisionPipeline {
    */
   @Override
   public void process(Mat source0) {
+
     System.out.println("Time since frame: "+ (System.currentTimeMillis()-lastFrameTime));
     lastFrameTime = System.currentTimeMillis();
+    System.out.println("Last target info: " + lastTarget.width + " " + lastTarget.height);
+
+    Mat subSource = new Mat();
+
+    if (lastTarget.width != 0 && lastTarget.height !=0) {
+
+      int rowStart = (int) (lastTarget.centerY - lastTarget.height/2 - 50);
+      if (rowStart <= 0) rowStart = 0;
+      int rowEnd = (int) (lastTarget.centerY + lastTarget.height/2 + 50);
+      if (rowEnd >= source0.height()-1) rowEnd = source0.height()-1;
+
+      int colStart = (int) (lastTarget.centerX - lastTarget.width/2 - 50);
+      if (colStart <= 0) colStart = 0;
+      int colEnd = (int) (lastTarget.centerX + lastTarget.width/2 + 50);
+      if (colEnd >= source0.width()-1) colEnd = source0.width()-1;
+
+      System.out.println("rs: "+ rowStart+" re: "+ rowEnd + " cs: "+ colStart+" ce: "+colEnd);
+      subSource = source0.submat(rowStart, rowEnd, colStart, colEnd);
+    } else subSource = source0; 
 
     // Step 1: HSV_Threshold0:
-    Mat hsvThresholdInput = source0;
+    Mat hsvThresholdInput = subSource;
     hsvThreshold(hsvThresholdInput, hsvThresholdHue, hsvThresholdSaturation, hsvThresholdValue, hsvThresholdOutput);
 
     // Step 2: Find_Contours0:
@@ -115,6 +141,14 @@ public class DynamicVisionPipeline implements VisionPipeline {
     ArrayList<RotatedRect> rotRectsToCategorize = rotatedRectsOutput;
     ArrayList<Rect> rectsToCategorize = rectsOutput;
     findTargets(rotRectsToCategorize, rectsToCategorize, findTargetsOutput);
+
+    //System.out.println("findtarget size:" + findTargetsOutput.size());
+    try {
+      lastTarget = findTargetsOutput.get(0);
+    } catch (Exception ex) {
+      lastTarget = new Target();
+    }
+    //lastTarget = findTargetsOutput.size()>0 ? findTargetsOutput.get(0) : null;
   }
 
   public Mat hsvThresholdOutput() { return hsvThresholdOutput; }
@@ -236,13 +270,14 @@ public class DynamicVisionPipeline implements VisionPipeline {
                 foundTarget.centerX = (leftRect.center.x + rightRect.center.x)/2;
                 foundTarget.centerY = (leftRect.center.y + rightRect.center.y)/2;
                 foundTarget.height = (inputRects.get(i).height + inputRects.get(j).height)/2;
-                foundTarget.width = rightRect.center.x - leftRect.center.x;
-                
+                //foundTarget.width = rightRect.center.x - leftRect.center.x;
+                foundTarget.width = (inputRects.get(j).x - inputRects.get(i).x);
+
                 // empirical calculations for distance and faceAngle
-                foundTarget.distance = 1890 / foundTarget.height;
+                foundTarget.distance = 6000/foundTarget.height; //1890 / foundTarget.height;
 
                 double y = foundTarget.width/foundTarget.height;
-                foundTarget.faceAngle = (0.00349 - Math.sqrt(0.0019033801-0.00096 * y))*-2083.33;
+                foundTarget.faceAngle = (0.00689 - Math.sqrt(0.00121148-0.000608 * y))*-3289;
                 if (inputRects.get(i).height > inputRects.get(j).height) foundTarget.faceAngle = -1 * foundTarget.faceAngle;
 
                 System.out.println("Target Found, h: " + foundTarget.height + " w/h: "+ foundTarget.width/foundTarget.height + 

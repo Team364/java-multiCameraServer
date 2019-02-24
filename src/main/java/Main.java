@@ -55,7 +55,7 @@ public final class Main {
     NetworkTableEntry visibleTargets_foundTargets = visionTable.getEntry("visibleTargets.foundTargets");
 
     System.out.println("Setting up NetworkTables client.");
-    ntinst.startClientTeam(364);
+    //ntinst.startClientTeam(364);
 
     // Read default camera config file
     if (!CameraStuff.readConfigFile()) {

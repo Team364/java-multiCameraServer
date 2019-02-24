@@ -133,7 +133,8 @@ public final class CameraStuff {
     camera.setConnectionStrategy(VideoSource.ConnectionStrategy.kKeepOpen);
 
     // override config file to show 320x240 at 30fps
-    camera.setVideoMode(PixelFormat.kYUYV, 320, 240, 30); //320x240(30), 1024x576(15), 640x480(30), 800x448(30/24/20/15/10), 352x288, 176x144 (threshold b/w 30 fps and 15 fps), 160x120
+    camera.setVideoMode(PixelFormat.kYUYV, 960, 720, 15); //320x240(30), 1024x576(15), 640x480(30), 800x448(30/24/20/15/10), 352x288, 176x144 (threshold b/w 30 fps and 15 fps), 160x120
+    //camera.setVideoMode(PixelFormat.kMJPEG, 1920, 1080, 30);
 
     if (config.streamConfig != null) {
       server.setConfigJson(gson.toJson(config.streamConfig));
