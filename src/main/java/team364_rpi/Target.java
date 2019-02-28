@@ -2,6 +2,7 @@ package team364_rpi;
 
 public class Target {
 
+    public long timeStamp = 0;
     public double distance = 0;
     public double faceAngle = 0;
     public double centerX = 0;
