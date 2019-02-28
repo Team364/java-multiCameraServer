@@ -33,6 +33,10 @@ public class Camera {
     private CameraConfig camConfig = new CameraConfig();
 
     // Constructors
+    /**
+     * Constructor.
+     * @param configFile local filepath to the config file to use for the camera
+     */
     public Camera(String configFile) {
         if (!setConfigFile(configFile)) {
         }

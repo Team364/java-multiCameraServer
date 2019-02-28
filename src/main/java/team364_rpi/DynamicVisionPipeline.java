@@ -32,6 +32,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
   // Internals
   private long lastFrameTime = 0;
   private Target lastTarget = new Target();
+  private int windowWidth = 150;
 
   // Contour Variables (w/defaults)
   double filterContoursMinArea = 100.0;
@@ -66,19 +67,20 @@ public class DynamicVisionPipeline implements VisionPipeline {
     System.out.println("Last target info: " + lastTarget.width + " " + lastTarget.height);
 
     Mat subSource = new Mat();
+    int rowStart = 0, rowEnd = 0, colStart = 0, colEnd = 0;
     if (lastTarget.width != 0 && lastTarget.height !=0) {
 
-      int rowStart = (int) (lastTarget.centerY - lastTarget.height/2 - 50);
+      rowStart = (int)(lastTarget.centerY - lastTarget.height/2) - windowWidth;
       if (rowStart <= 0) rowStart = 0;
-      int rowEnd = (int) (lastTarget.centerY + lastTarget.height/2 + 50);
+      rowEnd = (int)(lastTarget.centerY + lastTarget.height/2) + windowWidth;
       if (rowEnd >= source0.height()-1) rowEnd = source0.height()-1;
 
-      int colStart = (int) (lastTarget.centerX - lastTarget.width/2 - 50);
+      colStart = (int)(lastTarget.centerX - lastTarget.width/2) - windowWidth;
       if (colStart <= 0) colStart = 0;
-      int colEnd = (int) (lastTarget.centerX + lastTarget.width/2 + 50);
+      colEnd = (int)(lastTarget.centerX + lastTarget.width/2) + windowWidth;
       if (colEnd >= source0.width()-1) colEnd = source0.width()-1;
 
-      System.out.println("rs: "+ rowStart+" re: "+ rowEnd + " cs: "+ colStart+" ce: "+colEnd);
+      //System.out.println("rs: "+ rowStart+" re: "+ rowEnd + " cs: "+ colStart+" ce: "+colEnd);
       subSource = source0.submat(rowStart, rowEnd, colStart, colEnd);
     } else subSource = source0; 
 
@@ -105,7 +107,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
     // Step 5: Find targets based on visible rectangles
     ArrayList<RotatedRect> rotRectsToCategorize = rotatedRectsOutput;
     ArrayList<Rect> rectsToCategorize = rectsOutput;
-    findTargets(curFrameTime, rotRectsToCategorize, rectsToCategorize, findTargetsOutput);
+    findTargets(rowStart, colStart, curFrameTime, rotRectsToCategorize, rectsToCategorize, findTargetsOutput);
 
     // Save the most likely target for faster processing in the next iteration
     try {
@@ -248,12 +250,14 @@ public class DynamicVisionPipeline implements VisionPipeline {
 
   /**
    * Finds FRC 2019 targets based on rotation and location of given rectangles.
+   * @param frameRowStart vertical offset for coordinates
+   * @param frameColStart horizontal offset for coordinates
    * @param timeStamp time in milliseconds at which the frame was captured
    * @param inputRotatedRects rotated rectangles drawn around potential tapes
    * @param inputRects straight rectangles drawn around potential tapes
    * @param outputTargets found targets (includes location and size information)
    */
-  private void findTargets(long timeStamp, ArrayList<RotatedRect> inputRotatedRects, ArrayList<Rect> inputRects, ArrayList<Target> outputTargets){
+  private void findTargets(int frameRowStart, int frameColStart, long timeStamp, ArrayList<RotatedRect> inputRotatedRects, ArrayList<Rect> inputRects, ArrayList<Target> outputTargets){
     outputTargets.clear();
 
     // find a left-side rectangle:
@@ -278,19 +282,21 @@ public class DynamicVisionPipeline implements VisionPipeline {
                 // We *think* we found a target! Let's figure out some stuff about it.
                 Target foundTarget = new Target();
                 foundTarget.timeStamp = timeStamp;
-                foundTarget.centerX = (int) ((leftRect.center.x + rightRect.center.x)/2.0);
-                foundTarget.centerY = (int) ((leftRect.center.y + rightRect.center.y)/2.0);
-                foundTarget.height = (int) ((inputRects.get(i).height + inputRects.get(j).height)/2.0);
-                foundTarget.width = (int) ((inputRects.get(j).x - inputRects.get(i).x));
+                foundTarget.centerX = frameColStart + (leftRect.center.x + rightRect.center.x)/2.0;
+                foundTarget.centerY = frameRowStart + (leftRect.center.y + rightRect.center.y)/2.0;
+                foundTarget.height = (inputRects.get(i).height + inputRects.get(j).height)/2.0;
+                foundTarget.width = inputRects.get(j).x - inputRects.get(i).x;
 
                 // Empirical calculations for distance and faceAngle
-                foundTarget.distance = (int) (6000.0/foundTarget.height);
-                foundTarget.faceAngle = (int) ((0.00689 - Math.sqrt(0.00121148-0.000608 * foundTarget.width/foundTarget.height))*-3289.0);
+                foundTarget.distance = 6000.0/foundTarget.height;
+                foundTarget.faceAngle = 0.00689 - Math.sqrt(0.00121148-0.000608 * foundTarget.width/foundTarget.height)*-3289.0;
                 if (inputRects.get(i).height > inputRects.get(j).height) foundTarget.faceAngle = -1 * foundTarget.faceAngle;
 
                 System.out.println("Target Found, t: " + foundTarget.timeStamp +
+                                  " x: " + foundTarget.centerX + 
+                                  " y: " + foundTarget.centerY +
                                   " h: " + foundTarget.height + 
-                                  " w/h: "+ 1.0*foundTarget.width/foundTarget.height + 
+                                  " w/h: " + foundTarget.width/foundTarget.height + 
                                   " d: " + foundTarget.distance + 
                                   " Ang: " + foundTarget.faceAngle);
 

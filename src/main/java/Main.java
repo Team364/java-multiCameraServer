@@ -55,8 +55,8 @@ public final class Main {
     NetworkTableEntry visibleTargets_centerX = visionTable.getEntry("visibleTargets.centerX");
     NetworkTableEntry visibleTargets_centerY = visionTable.getEntry("visibleTargets.centerY");
 
-    // System.out.println("Setting up NetworkTables client.");
-    // ntinst.startClientTeam(364);
+    System.out.println("Setting up NetworkTables client.");
+    ntinst.startClientTeam(364);
 
     Camera cam0 = new Camera("/home/pi/configCamera0.json");
     VisionThread visionThread = new VisionThread(cam0.startCamera(), new DynamicVisionPipeline(), processingPipeline -> {
@@ -102,12 +102,22 @@ public final class Main {
         // Write data arrays to NetworkTables
         visibleTargets_foundTargets.setBoolean(foundTargets);
         visibleTargets_timeStamp.setNumber(timeStamp);
-        visibleTargets_distance.setNumberArray(distance.toArray(new Number[0]));
-        visibleTargets_faceAngle.setNumberArray(faceAngle.toArray(new Number[0]));
-        visibleTargets_width.setNumberArray(width.toArray(new Number[0]));
-        visibleTargets_height.setNumberArray(height.toArray(new Number[0]));
-        visibleTargets_centerX.setNumberArray(centerX.toArray(new Number[0]));
-        visibleTargets_centerY.setNumberArray(centerY.toArray(new Number[0]));
+        visibleTargets_distance.setDoubleArray(distance.stream().mapToDouble(i -> (double)i).toArray());
+        visibleTargets_faceAngle.setDoubleArray(faceAngle.stream().mapToDouble(i -> (double)i).toArray());
+        visibleTargets_width.setDoubleArray(width.stream().mapToDouble(i -> (double)i).toArray());
+        visibleTargets_height.setDoubleArray(height.stream().mapToDouble(i -> (double)i).toArray());
+        visibleTargets_centerX.setDoubleArray(centerX.stream().mapToDouble(i -> (double)i).toArray());
+        visibleTargets_centerY.setDoubleArray(centerY.stream().mapToDouble(i -> (double)i).toArray());
+
+        // // Write data arrays to NetworkTables
+        // visibleTargets_foundTargets.setBoolean(foundTargets);
+        // visibleTargets_timeStamp.setNumber(timeStamp);
+        // visibleTargets_distance.setNumberArray(distance.toArray(new Number[0]));
+        // visibleTargets_faceAngle.setNumberArray(faceAngle.toArray(new Number[0]));
+        // visibleTargets_width.setNumberArray(width.toArray(new Number[0]));
+        // visibleTargets_height.setNumberArray(height.toArray(new Number[0]));
+        // visibleTargets_centerX.setNumberArray(centerX.toArray(new Number[0]));
+        // visibleTargets_centerY.setNumberArray(centerY.toArray(new Number[0]));
 
         // Rest (in milliseconds)
         Thread.sleep(16); // 0.032 seconds (~60/sec), about 4x as fast as FPS
