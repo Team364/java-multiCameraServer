@@ -290,6 +290,7 @@ public class DynamicVisionPipeline implements VisionPipeline {
                 // Empirical calculations for distance and faceAngle
                 foundTarget.distance = 6000.0/foundTarget.height;
                 foundTarget.faceAngle = 0.00689 - Math.sqrt(0.00121148-0.000608 * foundTarget.width/foundTarget.height)*-3289.0;
+
                 if (inputRects.get(i).height > inputRects.get(j).height) foundTarget.faceAngle = -1 * foundTarget.faceAngle;
 
                 System.out.println("Target Found, t: " + foundTarget.timeStamp +
