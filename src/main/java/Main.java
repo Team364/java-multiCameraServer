@@ -33,6 +33,7 @@ public final class Main {
   private static ArrayList<Number> centerX = new ArrayList<Number>();
   private static ArrayList<Number> centerY = new ArrayList<Number>();
 
+  private static long startTime = 0;
 
   private Main() { }
 
@@ -109,18 +110,14 @@ public final class Main {
         visibleTargets_centerX.setDoubleArray(centerX.stream().mapToDouble(i -> (double)i).toArray());
         visibleTargets_centerY.setDoubleArray(centerY.stream().mapToDouble(i -> (double)i).toArray());
 
-        // // Write data arrays to NetworkTables
-        // visibleTargets_foundTargets.setBoolean(foundTargets);
-        // visibleTargets_timeStamp.setNumber(timeStamp);
-        // visibleTargets_distance.setNumberArray(distance.toArray(new Number[0]));
-        // visibleTargets_faceAngle.setNumberArray(faceAngle.toArray(new Number[0]));
-        // visibleTargets_width.setNumberArray(width.toArray(new Number[0]));
-        // visibleTargets_height.setNumberArray(height.toArray(new Number[0]));
-        // visibleTargets_centerX.setNumberArray(centerX.toArray(new Number[0]));
-        // visibleTargets_centerY.setNumberArray(centerY.toArray(new Number[0]));
-
         // Rest (in milliseconds)
         Thread.sleep(16); // 0.032 seconds (~60/sec), about 4x as fast as FPS
+
+        // Keep alive camera config every 10 secs.. in case it didn't initialize correctly
+        if (System.currentTimeMillis() - startTime > 10000){
+          cam0.reInitCameraConfig();
+          startTime = System.currentTimeMillis();
+        }
 
       } catch (InterruptedException ex) {
         return;
