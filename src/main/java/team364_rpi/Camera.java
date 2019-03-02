@@ -18,6 +18,7 @@ public class Camera {
 
     // Internals
     private String configFile = "";
+    private UsbCamera camera; 
 
     private static class CameraConfig {
         public String name = "";
@@ -127,9 +128,11 @@ public class Camera {
      */
     public VideoSource startCamera() {
         System.out.println("Starting camera '" + camConfig.name + "' on " + camConfig.path);
-        CameraServer inst = CameraServer.getInstance();
-        UsbCamera camera = new UsbCamera(camConfig.name, camConfig.path);
-        MjpegServer server = inst.startAutomaticCapture(camera);
+        CameraServer camServerInst = CameraServer.getInstance();
+        //UsbCamera camera = new UsbCamera(camConfig.name, camConfig.path);
+        camera = new UsbCamera(camConfig.name, camConfig.path);
+
+        MjpegServer server = camServerInst.startAutomaticCapture(camera);
 
         Gson gson = new GsonBuilder().create();
 
@@ -144,6 +147,12 @@ public class Camera {
             server.setConfigJson(gson.toJson(camConfig.streamConfig));
         }
         return camera;
+    }
+
+    public void reInitCameraConfig(){
+        Gson gson = new GsonBuilder().create();
+        camera.setConfigJson(gson.toJson(camConfig.config));
+        camera.setConnectionStrategy(VideoSource.ConnectionStrategy.kKeepOpen);
     }
 
 }
